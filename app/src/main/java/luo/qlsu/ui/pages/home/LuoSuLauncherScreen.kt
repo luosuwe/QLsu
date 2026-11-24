@@ -69,7 +69,7 @@ fun LuoSuLauncherScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Transparent)
+            .background(Color(0xFFF4F6F9))
             .windowInsetsPadding(WindowInsets.statusBars)
     ) {
         Column(
@@ -140,10 +140,12 @@ fun LuoSuLauncherScreen(
                 color = colors.textSecondary
             )
 
-            PrimaryButton("打开用户中心", onUserCenterClick)
-            SecondaryButton("打开 QLsu 设置", onOpenSettings)
-            SecondaryButton("定时任务", onOpenSchedule)
-            SecondaryButton("视频解析", onVideoParseClick)
+            QuickEntriesCard(
+                onUserCenter = onUserCenterClick,
+                onSettings = onOpenSettings,
+                onSchedule = onOpenSchedule,
+                onVideo = onVideoParseClick,
+            )
 
             // ---------- 界面动画开关 ----------
             Row(
@@ -183,6 +185,62 @@ fun LuoSuLauncherScreen(
 }
 
 @Composable
+private fun QuickEntriesCard(
+    onUserCenter: () -> Unit,
+    onSettings: () -> Unit,
+    onSchedule: () -> Unit,
+    onVideo: () -> Unit,
+) {
+    val colors = QLsuTheme.colors
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .glassSurface(RoundedCornerShape(Dimens.CardCornerRadius))
+            .padding(vertical = 4.dp)
+    ) {
+        QuickRow("打开用户中心", true, onUserCenter)
+        QuickDivider()
+        QuickRow("打开 QLsu 设置", false, onSettings)
+        QuickDivider()
+        QuickRow("定时任务", false, onSchedule)
+        QuickDivider()
+        QuickRow("视频解析", false, onVideo)
+    }
+}
+
+@Composable
+private fun QuickRow(text: String, highlight: Boolean, onClick: () -> Unit) {
+    val colors = QLsuTheme.colors
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .pressClick(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 15.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text,
+            modifier = Modifier.weight(1f),
+            fontSize = 15.sp,
+            fontWeight = if (highlight) FontWeight.SemiBold else FontWeight.Normal,
+            color = if (highlight) Color(0xFFE9497E) else colors.textPrimary
+        )
+        Text("›", fontSize = 18.sp, color = colors.textSecondary)
+    }
+}
+
+@Composable
+private fun QuickDivider() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp)
+            .height(1.dp)
+            .background(Color(0x11000000))
+    )
+}
+
+@Composable
 private fun AccountAvatar(account: AccountInfo?, onClick: () -> Unit) {
     val initials = account?.initials ?: "QL"
     Box(
@@ -214,6 +272,23 @@ private fun AccountCard(account: AccountInfo?, onUserCenterClick: () -> Unit) {
             .padding(16.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.linearGradient(listOf(Color(0xFFE9497E), Color(0xFFF7A8C2)))
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    account?.initials ?: "QL",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+            Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(
                     if (account == null) "还没有同步 QQ 账号" else "QQ ${account.uin}",
