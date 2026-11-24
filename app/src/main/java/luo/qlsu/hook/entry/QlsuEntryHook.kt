@@ -3,6 +3,7 @@ package luo.qlsu.hook.entry
 import android.app.Activity
 import android.content.Intent
 import luo.qlsu.account.AccountSync
+import luo.qlsu.hook.sign.SignInSync
 import luo.qlsu.activity.SettingActivity
 import luo.qlsu.utils.hook.hookAfter
 import luo.qlsu.utils.log.LogUtils
@@ -31,6 +32,7 @@ object QlsuEntryHook {
                 if (page == "account" || page == "usercenter") {
                     AccountSync.openWebUserCenter(activity)
                 } else {
+                    runCatching { SignInSync.applyAll() }
                     activity.startActivity(
                         Intent(activity, SettingActivity::class.java).apply {
                             putExtra(EXTRA_PAGE, page)
