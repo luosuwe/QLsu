@@ -60,6 +60,31 @@ qedge_shots/   界面截图
 
 Cookie、skey、pskey、pt4Token、设备信息等一律留在本机，不会上传。
 
-## 许可
+## 许可与第三方
 
-GPL-3.0。上游项目：[QFun](https://github.com/oneQAQone/QFun)、[XAutoDaily](https://github.com/LuckyPray/XAutoDaily)。
+本项目遵循 **GNU General Public License v3.0**，完整协议见 [LICENSE](LICENSE)。
+
+`
+QLsu
+Copyright (C) 2026 luosuwe
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+`
+
+上游与第三方组件：
+
+| 组件 | 许可 | 用途 |
+| --- | --- | --- |
+| [QFun](https://github.com/oneQAQone/QFun) | GPL-3.0 | 模块骨架、Hook 引擎、BeanShell 脚本 |
+| [XAutoDaily](https://github.com/LuckyPray/XAutoDaily) | GPL-3.0 | 自动签到任务库 |
+| BeanShell | Apache-2.0 | 脚本解释器 |
+| libxposed API | Apache-2.0 | Modern Xposed 接口 |
+| AndroidX / Jetpack Compose | Apache-2.0 | 界面 |
