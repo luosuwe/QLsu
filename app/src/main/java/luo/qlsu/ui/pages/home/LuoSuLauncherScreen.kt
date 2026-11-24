@@ -62,6 +62,7 @@ fun LuoSuLauncherScreen(
     onTelegramClick: () -> Unit,
     onGroupClick: () -> Unit,
     onWebsiteClick: () -> Unit,
+    onVideoParseClick: () -> Unit,
 ) {
     val colors = QLsuTheme.colors
 
@@ -142,6 +143,7 @@ fun LuoSuLauncherScreen(
             PrimaryButton("打开用户中心", onUserCenterClick)
             SecondaryButton("打开 QLsu 设置", onOpenSettings)
             SecondaryButton("定时任务", onOpenSchedule)
+            SecondaryButton("视频解析", onVideoParseClick)
 
             // ---------- 界面动画开关 ----------
             Row(
