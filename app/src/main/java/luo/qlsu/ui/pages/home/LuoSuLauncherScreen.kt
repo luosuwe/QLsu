@@ -115,10 +115,10 @@ fun LuoSuLauncherScreen(
                     .padding(18.dp)
             ) {
                 Column {
-                    Text("QQ / TIM 全功能模块", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("QQ / TIM 多功能模块", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "QFun 全功能 + 独立定时任务 · 洛苏 UI",
+                        "多功能 + 独立定时任务 · 洛苏 UI",
                         fontSize = 12.sp,
                         color = Color.White.copy(alpha = 0.9f)
                     )
