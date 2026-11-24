@@ -9,7 +9,7 @@ object SocialConfigManager {
     private var qqGroupUin: String = ""
     private var telegramChannel: String = ""
     
-    var githubRepo: String = "https://github.com/oneQAQone/QLsu"
+    var githubRepo: String = "https://github.com/luosuwe/QLsu"
         private set
 
     val qqGroupUrl: String
