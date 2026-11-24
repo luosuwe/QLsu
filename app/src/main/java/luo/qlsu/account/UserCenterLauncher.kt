@@ -3,43 +3,31 @@ package luo.qlsu.account
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.os.Handler
-import android.os.Looper
 import android.widget.Toast
 import androidx.core.net.toUri
 import luo.qlsu.hook.entry.QlsuEntryHook
-import luo.qlsu.utils.net.HttpUtils
-import org.json.JSONObject
 import java.net.URLEncoder
 
 /**
- * 模块 App 里点「头像 / 用户中心」时使用：
- * 1. 本地已有 QQ + 设备令牌 → 用令牌换一次性票据，浏览器打开已登录的用户中心；
- * 2. 没有同步过 → 通过 JumpActivity 唤起 QQ 内的 QLsu，在那边同步并打开。
+ * 用户中心入口：
+ * - 模块 App 内点头像 / 用户中心 → 打开登录页，必须输入 QQ 号 + 密码；
+ * - 在 QQ 菜单里点头像 → 由 QQ 进程用设备令牌换一次性票据，自动登录（见 AccountSync.openWebUserCenter）。
  */
 object UserCenterLauncher {
 
     const val SITE = "https://qlsu.luosu.top"
 
+    /**
+     * 模块 App 内点击头像 / 用户中心：打开后端登录页，必须输入 QQ 号 + 密码。
+     * （只有在 QQ 菜单里点头像才走一次性票据自动登录，见 AccountSync.openWebUserCenter）
+     */
     fun open(context: Context) {
         val info = AccountStore.read(context)
-        if (info == null || !info.isReady) {
-            openViaHost(context)
-            return
+        val url = buildString {
+            append(SITE).append("/login.php")
+            if (info != null && info.uin.isNotBlank()) append("?uin=").append(encode(info.uin))
         }
-        Thread {
-            val body = "uin=${encode(info.uin)}&token=${encode(info.token)}"
-            val resp = HttpUtils.postSync("$SITE/api/ticket.php", body)
-            val url = runCatching { JSONObject(resp).optString("url") }.getOrDefault("")
-            Handler(Looper.getMainLooper()).post {
-                if (url.isNotBlank()) {
-                    startBrowser(context, url)
-                } else {
-                    Toast.makeText(context, "登录失效，正在通过 QQ 重新同步…", Toast.LENGTH_SHORT).show()
-                    openViaHost(context)
-                }
-            }
-        }.start()
+        startBrowser(context, url)
     }
 
     /** 兜底：唤起 QQ 里的 QLsu（JumpActivity + qlsu_open），由 QQ 进程换取票据并打开浏览器 */
