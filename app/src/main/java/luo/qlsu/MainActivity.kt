@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 import luo.qlsu.account.AccountInfo
 import luo.qlsu.account.AccountStore
 import luo.qlsu.account.UserCenterLauncher
+import luo.qlsu.video.VideoParseActivity
 import luo.qlsu.hook.entry.QlsuEntryHook
 import luo.qlsu.ui.components.dialogs.ConfirmDialog
 import luo.qlsu.ui.core.theme.QLsuTheme
@@ -90,7 +91,8 @@ class MainActivity : ComponentActivity() {
                     onGithubClick = { jump(SocialConfigManager.githubRepo) },
                     onTelegramClick = { jump(SocialConfigManager.telegramUrl) },
                     onGroupClick = { jump(SocialConfigManager.qqGroupUrl) },
-                    onWebsiteClick = { UserCenterLauncher.openUrl(this, UserCenterLauncher.SITE) }
+                    onWebsiteClick = { UserCenterLauncher.openUrl(this, UserCenterLauncher.SITE) },
+        onVideoParseClick = { startActivity(android.content.Intent(this, VideoParseActivity::class.java)) }
                 ) }
 
                 ConfirmDialog(
