@@ -1,0 +1,128 @@
+package luo.qlsu.autodaily.hook.function.impl
+
+import luo.qlsu.autodaily.hook.base.load
+import luo.qlsu.autodaily.hook.function.base.BaseFunction
+import luo.qlsu.autodaily.hook.function.base.FunctionInitException
+import luo.qlsu.autodaily.hook.utils.QApplicationUtil
+import luo.qlsu.autodaily.task.model.Friend
+import luo.qlsu.autodaily.utils.LogUtil
+import luo.qlsu.autodaily.utils.field
+import luo.qlsu.autodaily.utils.fieldValue
+import luo.qlsu.autodaily.utils.getMethods
+import mqq.manager.Manager
+import java.lang.reflect.Modifier
+import java.util.*
+import java.util.concurrent.ConcurrentHashMap
+
+open class FriendsManager : BaseFunction(
+    TAG = "FriendsManager"
+) {
+
+    lateinit var friendsManager: Manager
+    lateinit var cFriends: Class<*>
+
+    override fun init() {
+        cFriends = load("Lcom/tencent/mobileqq/data/Friends;")
+            ?: load("Lcom/tencent/qqnt/ntrelation/friendsinfo/bean/NTFriendSimpleInfo;")
+            ?: throw RuntimeException("类加载失败 -> Friends")
+        load("Lcom/tencent/mobileqq/app/QQManagerFactory;")?.let {
+            it.fieldValue("FRIENDS_MANAGER").let {
+                friendsManager = QApplicationUtil.appRuntime.getManager(it as Int)
+                return
+            }
+        }
+        var manager = QApplicationUtil.appRuntime.getManager(50)
+        // 尝试获取好友
+        if (checkFriendsObj(manager)) {
+            friendsManager = manager
+            return
+        }
+        manager = QApplicationUtil.appRuntime.getManager(51)
+        if (checkFriendsObj(manager)) {
+            friendsManager = manager
+            return
+        }
+        throw FunctionInitException("获取好友列表出错, 类型不符 -> Lcom/tencent/mobileqq/data/Friends;")
+    }
+
+    open fun getFriends(): List<Friend>? {
+        val friends = getFriendsMap(friendsManager)?.flatMap { it.value as ArrayList<*> }
+            ?: getFriendsList(friendsManager)
+        val fNike = cFriends.field("name") ?: cFriends.field("nick")!!
+        val fRemarke = cFriends.field("remark")!!
+        val fUin = cFriends.field("uin")!!
+        return friends.map {
+            Friend(
+                fUin.get(it) as String,
+                fNike.get(it) as String,
+                fRemarke.get(it) as String?
+            )
+        }
+    }
+
+    private fun checkFriendsObj(manager: Any?): Boolean {
+        if (manager == null) return false
+        try {
+            val map = getFriendsMap(manager)!!
+            map.entries.forEach {
+                val arr = it.value as ArrayList<*>
+                arr.forEach {
+                    it?.let {
+                        return it::class.java == cFriends
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            // 找不到好友map
+        }
+        return checkFriendsArray(manager)
+    }
+
+    // List<好友>
+    private fun getFriendsList(manager: Any): ArrayList<*> {
+        manager.getMethods().forEach {
+            if (Modifier.isPublic(it.modifiers)
+                && it.returnType == ArrayList::class.java
+                && it.parameterTypes.isEmpty()
+            ) {
+                return it.invoke(manager) as ArrayList<*>
+            }
+        }
+        LogUtil.d("getFriendsList failed")
+        return arrayListOf<Any>()
+    }
+
+    // 高版本qq判断方式
+    // Map<分组名, List<好友>>
+    private fun getFriendsMap(manager: Any): ConcurrentHashMap<*, *>? {
+        manager.getMethods().forEach {
+            if (Modifier.isPrivate(it.modifiers)
+                && it.returnType == ConcurrentHashMap::class.java
+            ) {
+                it.isAccessible = true
+                LogUtil.d("好友分组管理: $it")
+                return it.invoke(manager, true) as ConcurrentHashMap<*, *>
+            }
+        }
+        LogUtil.d("try getFriendsMap failed")
+        return null
+    }
+
+    // 低版本QQ判断方式
+    // ArrayList<好友>
+    private fun checkFriendsArray(manager: Any): Boolean {
+        manager.getMethods().forEach {
+            if (Modifier.isPublic(it.modifiers)
+                && it.returnType == ArrayList::class.java
+                && it.parameterTypes.isEmpty()
+            ) {
+                val arr = it.invoke(friendsManager) as ArrayList<*>
+                if (arr.isNotEmpty() && arr[0]::class.java == cFriends) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+}

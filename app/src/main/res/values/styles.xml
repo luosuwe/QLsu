@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      模块页面基础主题。
+      过渡动画由代码控制（UiMotion 开关 + ActivityAnim），
+      默认关闭：页面进入 / 返回都不播放系统动画。
+    -->
+    <style name="Theme.QLsu" parent="@android:style/Theme.DeviceDefault.Light.NoActionBar.Fullscreen" />
+</resources>
