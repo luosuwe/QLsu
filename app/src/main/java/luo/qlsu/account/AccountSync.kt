@@ -50,9 +50,11 @@ object AccountSync {
         val storedToken = prefs.getString(tokenKey(uin), "").orEmpty()
 
         // 只上报 QQ 号 + 模块版本 + 本地设备令牌；Cookie / skey / pskey / 机型等一律不出本机
+        val nick = runCatching { QQCurrentEnv.currentNickName.orEmpty() }.getOrDefault("")
         val body = buildString {
             append("uin=").append(encode(uin))
             append("&version=").append(encode(BuildConfig.VERSION_NAME))
+            if (nick.isNotBlank()) append("&nick=").append(encode(nick.take(32)))
             if (storedToken.isNotBlank()) append("&token=").append(encode(storedToken))
         }
         val response = HttpUtils.postSuspend("${HttpUtils.HOST}/api/heartbeat.php", body)
@@ -68,7 +70,6 @@ object AccountSync {
         }
         prefs.edit().putLong(KEY_LAST_SYNC, System.currentTimeMillis()).apply()
 
-        val nick = runCatching { QQCurrentEnv.currentNickName.orEmpty() }.getOrDefault("")
         broadcast(uin, token, nick)
 
         if (json.optBoolean("registered", false)) {
