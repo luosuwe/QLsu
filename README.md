@@ -10,7 +10,7 @@ QQ / TIM 的 Xposed 功能模块，把 **QFun** 的功能与 **XAutoDaily** 的�
 - **群聊**：防艾特全体、群打卡、自动续火、多拍一拍
 - **净化**：去广告位、去弹窗、去链接预览、去 DIY 卡片
 - **交互**：一键点赞、平板模式、自定义设备、QQ 设置页入口、加号面板入口
-- **自动签到**：QQ 会员、超级会员、大会员、黄钻、QQ 打卡、情侣空间、王者荣耀等任务库
+- **自动签到**：QQ 会员、超级会员、大会员、黄钻、QQ 打卡、情侣空间、王者荣耀……每个签到项一个独立开关，打开后每天自动签到
 - **脚本**：BeanShell 脚本，可从在线脚本库获取
 
 功能开关全部在模块 App 内，修改后按提示重启 QQ 生效。
@@ -84,7 +84,7 @@ GNU General Public License for more details.
 | 组件 | 许可 | 用途 |
 | --- | --- | --- |
 | [QFun](https://github.com/oneQAQone/QFun) | GPL-3.0 | 模块骨架、Hook 引擎、BeanShell 脚本 |
-| [XAutoDaily](https://github.com/LuckyPray/XAutoDaily) | GPL-3.0 | 自动签到任务库 |
+| [XAutoDaily](https://github.com/LuckyPray/XAutoDaily) | GPL-3.0 | 自动签到引擎与签到项 |
 | BeanShell | Apache-2.0 | 脚本解释器 |
 | libxposed API | Apache-2.0 | Modern Xposed 接口 |
 | AndroidX / Jetpack Compose | Apache-2.0 | 界面 |
