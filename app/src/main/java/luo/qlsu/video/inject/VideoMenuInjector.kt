@@ -43,13 +43,35 @@ object VideoMenuInjector {
     @Volatile
     private var lastShareAt: Long = 0L
 
+    @Volatile
+    private var lastOpenAt: Long = 0L
+
     fun install() {
         if (HostInfo.packageName !in TARGETS) return
         runCatching { hookShareIntent() }
         runCatching { hookDialog() }
         runCatching { hookPopup() }
+        runCatching { hookClipboard() }
     }
 
+    /** 夺舍「复制链接 / 分享链接」：App 把链接写入剪贴板时直接接管并解析 */
+    private fun hookClipboard() {
+        val m = android.content.ClipboardManager::class.java
+            .getDeclaredMethod("setPrimaryClip", android.content.ClipData::class.java)
+        m.hookAfter { param ->
+            val clip = param.args.getOrNull(0) as? android.content.ClipData ?: return@hookAfter
+            val text = clip.getItemAt(0)?.text?.toString().orEmpty()
+            if (!looksLikeVideoLink(text)) return@hookAfter
+            val now = System.currentTimeMillis()
+            if (now - lastOpenAt < 4000) return@hookAfter
+            lastOpenAt = now
+            openParse(HostInfo.hostContext, text)
+        }
+    }
+
+    private fun looksLikeVideoLink(text: String): Boolean =
+        listOf("douyin.com", "kuaishou.com", "chenzhongtech.com", "bilibili.com", "b23.tv")
+            .any { text.contains(it) }
     /** 记录最近一次分享文案（里面带视频链接） */
     private fun hookShareIntent() {
         val method: Method = Activity::class.java.getDeclaredMethod("startActivity", Intent::class.java)
