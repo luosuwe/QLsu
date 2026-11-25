@@ -23,6 +23,8 @@ import luo.qlsu.account.AccountInfo
 import luo.qlsu.account.AccountStore
 import luo.qlsu.account.UserCenterLauncher
 import luo.qlsu.video.VideoParseActivity
+import luo.qlsu.account.SignInTime
+import android.app.TimePickerDialog
 import luo.qlsu.hook.entry.QlsuEntryHook
 import luo.qlsu.ui.components.dialogs.ConfirmDialog
 import luo.qlsu.ui.core.theme.QLsuTheme
@@ -92,7 +94,15 @@ class MainActivity : ComponentActivity() {
                     onTelegramClick = { jump(SocialConfigManager.telegramUrl) },
                     onGroupClick = { jump(SocialConfigManager.qqGroupUrl) },
                     onWebsiteClick = { UserCenterLauncher.openUrl(this, UserCenterLauncher.SITE) },
-        onVideoParseClick = { startActivity(android.content.Intent(this, VideoParseActivity::class.java)) }
+        onVideoParseClick = { startActivity(android.content.Intent(this, VideoParseActivity::class.java)) },
+        signTimeLabel = SignInTime.label(this),
+        onSignTimeClick = {
+            TimePickerDialog(this, { _, h, m ->
+                SignInTime.set(this, h, m)
+                Toast.makeText(this, "签到时间已设为 %02d:%02d".format(h, m), Toast.LENGTH_SHORT).show()
+                recreate()
+            }, SignInTime.hour(this), SignInTime.minute(this), true).show()
+        }
                 ) }
 
                 ConfirmDialog(
