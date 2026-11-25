@@ -147,7 +147,9 @@ object TaskExecutor {
                     runtimeTasks.remove(it)
                 }
             }
-            XANotification.setContent("签到执行完毕", onGoing = false, isTask = true)
+            val total = needExecGroups.sumOf { it.tasks.size }
+            val failed = needExecGroups.flatMap { it.tasks }.count { it.errInfo.count > 0 }
+            XANotification.setContent("执行完成：成功 ${total - failed}/$total", onGoing = false, isTask = true)
             withContext(Dispatchers.IO) {
                 delay(5000)
             }
