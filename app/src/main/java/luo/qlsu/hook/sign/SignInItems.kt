@@ -8,57 +8,30 @@ import luo.qlsu.hook.base.BaseSwitchHookItem
 /**
  * 「签到」分类：每个签到项一个开关。
  * 打开后把对应任务写进 AutoDaily 的每日调度（每天 08:00 执行），关闭则停用。
+ * taskId 用 AutoDaily 默认配置里的真实任务名（见 assets/default_conf.yaml）。
  */
 abstract class BaseSignInItem(val taskId: String) : BaseSwitchHookItem(true)
 
-@HookItemAnnotation(
-    tag = "QQ会员签到",
-    desc = "每天自动签到 QQ 会员",
-    category = HookCategory.SIGN
-)
+@HookItemAnnotation(tag = "QQ会员签到", desc = "每天自动签到 QQ 会员", category = HookCategory.SIGN)
 object SignQqVip : BaseSignInItem("QQ会员")
 
-@HookItemAnnotation(
-    tag = "超级会员签到",
-    desc = "每天自动签到超级会员",
-    category = HookCategory.SIGN
-)
-object SignSvip : BaseSignInItem("超级会员")
+@HookItemAnnotation(tag = "超级会员签到", desc = "每天自动签到 QQ 超级会员", category = HookCategory.SIGN)
+object SignSvip : BaseSignInItem("QQ超级会员")
 
-@HookItemAnnotation(
-    tag = "大会员签到",
-    desc = "每天自动签到大会员",
-    category = HookCategory.SIGN
-)
-object SignBigVip : BaseSignInItem("大会员")
+@HookItemAnnotation(tag = "大会员签到", desc = "每天自动签到大会员官网", category = HookCategory.SIGN)
+object SignBigVip : BaseSignInItem("大会员官网签到")
 
-@HookItemAnnotation(
-    tag = "黄钻签到",
-    desc = "每天自动签到黄钻",
-    category = HookCategory.SIGN
-)
-object SignYellowDiamond : BaseSignInItem("黄钻")
+@HookItemAnnotation(tag = "黄钻签到", desc = "每天自动签到 QQ 黄钻", category = HookCategory.SIGN)
+object SignYellowDiamond : BaseSignInItem("QQ黄钻")
 
-@HookItemAnnotation(
-    tag = "QQ打卡",
-    desc = "每天自动 QQ 打卡",
-    category = HookCategory.SIGN
-)
-object SignQqClock : BaseSignInItem("QQ打卡")
+@HookItemAnnotation(tag = "QQ打卡", desc = "每天自动 QQ 打卡", category = HookCategory.SIGN)
+object SignQqClock : BaseSignInItem("QQ打卡（左上角）")
 
-@HookItemAnnotation(
-    tag = "情侣空间签到",
-    desc = "每天自动签到情侣空间",
-    category = HookCategory.SIGN
-)
-object SignCoupleSpace : BaseSignInItem("情侣空间")
+@HookItemAnnotation(tag = "情侣空间签到", desc = "每天自动签到情侣空间", category = HookCategory.SIGN)
+object SignCoupleSpace : BaseSignInItem("情侣空间打卡")
 
-@HookItemAnnotation(
-    tag = "王者荣耀签到",
-    desc = "每天自动签到王者荣耀",
-    category = HookCategory.SIGN
-)
-object SignHonorOfKings : BaseSignInItem("王者荣耀")
+@HookItemAnnotation(tag = "王者荣耀签到", desc = "每天自动签到王者营地", category = HookCategory.SIGN)
+object SignHonorOfKings : BaseSignInItem("王者营地签到")
 
 /** 把开关状态同步到 AutoDaily 的每日调度（只在 QQ 进程里调用） */
 object SignInSync {
@@ -73,13 +46,14 @@ object SignInSync {
     fun applyAll() {
         all.forEach { item ->
             runCatching {
+                val id = item.taskId
                 if (item.isEnable) {
-                    if (ScheduledTaskStore.find(item.taskId) == null) {
-                        ScheduledTaskStore.add(item.taskId, CRON)
+                    if (ScheduledTaskStore.find(id) == null) {
+                        ScheduledTaskStore.add(id, CRON)
                     }
-                    ScheduledTaskStore.setEnabled(item.taskId, true)
-                } else if (ScheduledTaskStore.find(item.taskId) != null) {
-                    ScheduledTaskStore.setEnabled(item.taskId, false)
+                    ScheduledTaskStore.setEnabled(id, true)
+                } else if (ScheduledTaskStore.find(id) != null) {
+                    ScheduledTaskStore.setEnabled(id, false)
                 }
             }
         }
