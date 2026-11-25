@@ -4,6 +4,7 @@ import androidx.core.content.edit
 import luo.qlsu.account.AccountSync
 import luo.qlsu.autodaily.AdEngine
 import luo.qlsu.hook.entry.QlsuEntryHook
+import luo.qlsu.hook.sign.SignInSync
 import luo.qlsu.generated.HookRegistry
 import luo.qlsu.hook.base.BaseApiHookItem
 import luo.qlsu.hook.base.BaseClickableHookItem
@@ -35,6 +36,8 @@ object MainHook {
 
         // 签到子系统常驻：不提供总开关，任务是否执行由每个任务的定时开关决定
         runCatching { AdEngine.install() }
+        // 把「签到」分类里各开关的状态写进 AutoDaily 的每日调度
+        runCatching { SignInSync.applyAll() }
         runCatching { QlsuEntryHook.install() }
 
         loadApiHook()
