@@ -120,6 +120,10 @@ class SettingViewModel : ViewModel() {
     fun refreshCategories() {
         categories = HookCategory.ORDER.mapNotNull { category ->
             val itemsInCategory = allHookItems.filter { it.category == category && it.isAvailable }
+                .let { list ->
+                    // 签到时间固定放在签到分类最上面
+                    if (category == HookCategory.SIGN) list.sortedByDescending { it.name == "签到时间" } else list
+                }
             if (itemsInCategory.isNotEmpty()) {
                 CategoryData(category, itemsInCategory.map { hookItem ->
                     val isClickable = hookItem is BaseClickableHookItem<*>
