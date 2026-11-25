@@ -1,6 +1,6 @@
 # QLsu
 
-QQ / TIM 的 Xposed 功能模块，把 **QFun** 的功能与 **XAutoDaily** 的自动签到合并成一个 App。
+QQ / TIM 的 Xposed 多功能模块：聊天增强、群管、净化、自动签到与视频解析。
 
 > 当前为**内测版本**。
 
