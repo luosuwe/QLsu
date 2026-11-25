@@ -11,8 +11,8 @@ import java.net.URL
 import java.net.URLDecoder
 
 /**
- * 视频解析：抖音 / 快手 / 哔哩哔哩，返回最高画质直链。
- * 只处理用户主动粘贴或分享进来的公开视频链接。
+ * 视频/图文解析：抖音、快手、哔哩哔哩。
+ * 视频返回最高画质直链；图文返回图片列表。
  */
 object VideoParser {
 
@@ -20,7 +20,10 @@ object VideoParser {
         val platform: String,
         val title: String,
         val url: String,
-    )
+        val images: List<String> = emptyList(),
+    ) {
+        val isImagePost: Boolean get() = images.isNotEmpty() && url.isBlank()
+    }
 
     private const val UA =
         "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) " +
@@ -77,36 +80,56 @@ object VideoParser {
     private fun douyin(link: String): VideoInfo? {
         val finalUrl = follow(link)
         val id = Regex("/video/(\\d+)").find(finalUrl)?.groupValues?.get(1)
+            ?: Regex("/note/(\\d+)").find(finalUrl)?.groupValues?.get(1)
             ?: Regex("[?&]modal_id=(\\d+)").find(finalUrl)?.groupValues?.get(1)
+            ?: Regex("(\\d{15,25})").find(link)?.groupValues?.get(1)
             ?: return null
         val api = "https://www.iesdouyin.com/web/api/v2/aweme/iteminfo/?item_ids=$id"
         val body = get(api, mapOf("Referer" to "https://www.douyin.com/"))
         val json = JSONObject(body)
         val item = json.optJSONArray("item_list")?.optJSONObject(0) ?: return null
-        val title = item.optString("desc").ifBlank { "抖音视频_$id" }
+        val title = item.optString("desc").ifBlank { "抖音_$id" }
+
+        val images = mutableListOf<String>()
+        item.optJSONArray("images")?.let { arr ->
+            for (i in 0 until arr.length()) {
+                val u = arr.optJSONObject(i)?.optJSONArray("url_list")?.optString(0).orEmpty()
+                if (u.isNotBlank()) images.add(u)
+            }
+        }
+
         val play = item.optJSONObject("video")
             ?.optJSONObject("play_addr")
             ?.optJSONArray("url_list")
             ?.optString(0)
             .orEmpty()
-        if (play.isBlank()) return null
+
+        if (play.isBlank() && images.isEmpty()) return null
         val best = play.replace("playwm", "play").replace("&watermark=1", "")
-        return VideoInfo("抖音", title, best)
+        return VideoInfo("抖音", title, best, images)
     }
 
     // ---------------- 快手 ----------------
     private fun kuaishou(link: String): VideoInfo? {
         val finalUrl = follow(link)
         val html = get(finalUrl, mapOf("Referer" to "https://www.kuaishou.com/"))
-        val raw = Regex("\"srcNoMark\"\\s*:\\s*\"([^\"]+)\"").find(html)?.groupValues?.get(1)
+        val video = Regex("\"srcNoMark\"\\s*:\\s*\"([^\"]+)\"").find(html)?.groupValues?.get(1)
             ?: Regex("\"photoUrl\"\\s*:\\s*\"([^\"]+)\"").find(html)?.groupValues?.get(1)
-            ?: return null
-        val url = raw.replace("\\/", "/").replace("\\u002F", "/")
+
+        val images = mutableListOf<String>()
+        Regex("\"atlas\"\\s*:\\s*\\[(.*?)\\]", RegexOption.DOT_MATCHES_ALL).find(html)?.let { m ->
+            Regex("\"url\"\\s*:\\s*\"([^\"]+)\"").findAll(m.groupValues[1]).forEach {
+                images.add(it.groupValues[1].replace("\\/", "/"))
+            }
+        }
+
+        if (video == null && images.isEmpty()) return null
         val title = Regex("\"caption\"\\s*:\\s*\"([^\"]+)\"").find(html)?.groupValues?.get(1)
             ?.let { runCatching { URLDecoder.decode(it, "UTF-8") }.getOrDefault(it) }
             .orEmpty()
-            .ifBlank { "快手视频" }
-        return VideoInfo("快手", title, url)
+            .ifBlank { "快手内容" }
+        val url = video?.replace("\\/", "/").orEmpty()
+        return VideoInfo("快手", title, url, images)
     }
 
     // ---------------- 哔哩哔哩 ----------------
