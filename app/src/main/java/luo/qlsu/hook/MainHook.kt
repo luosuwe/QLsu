@@ -5,7 +5,7 @@ import luo.qlsu.account.AccountSync
 import luo.qlsu.autodaily.AdEngine
 import luo.qlsu.hook.entry.QlsuEntryHook
 import luo.qlsu.hook.sign.SignInSync
-import luo.qlsu.account.SignInTime
+
 import luo.qlsu.generated.HookRegistry
 import luo.qlsu.hook.base.BaseApiHookItem
 import luo.qlsu.hook.base.BaseClickableHookItem
@@ -39,21 +39,6 @@ object MainHook {
         runCatching { AdEngine.install() }
         // 把「签到」分类里各开关的状态写进 AutoDaily 的每日调度
         runCatching { SignInSync.applyAll() }
-        // 接收模块 App 发来的「签到时间」设置，写进 QQ 进程偏好并重建调度
-        runCatching {
-            val ctx = luo.qlsu.utils.qq.HostInfo.hostContext
-            ctx.registerReceiver(object : android.content.BroadcastReceiver() {
-                override fun onReceive(c: android.content.Context, i: android.content.Intent) {
-                    val h = i.getIntExtra(SignInTime.EXTRA_HOUR, 0)
-                    val m = i.getIntExtra(SignInTime.EXTRA_MIN, 0)
-                    ctx.getSharedPreferences("QLsu_Config_global", android.content.Context.MODE_MULTI_PROCESS)
-                        .edit().putInt("sign_hour", h).putInt("sign_min", m).apply()
-                    SignInSync.applyAll()
-                }
-            }, android.content.IntentFilter(SignInTime.ACTION))
-        }
-        runCatching { QlsuEntryHook.install() }
-
         loadApiHook()
         initSwitchHookItem()
         hookAccountChange()
