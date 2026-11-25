@@ -47,6 +47,7 @@ object VideoMenuInjector {
         if (HostInfo.packageName !in TARGETS) return
         runCatching { hookShareIntent() }
         runCatching { hookDialog() }
+        runCatching { hookPopup() }
     }
 
     /** 记录最近一次分享文案（里面带视频链接） */
@@ -79,6 +80,51 @@ object VideoMenuInjector {
         }
     }
 
+    private fun hookPopup() {
+        val cls = android.widget.PopupWindow::class.java
+        runCatching {
+            val m1 = cls.getDeclaredMethod(
+                "showAtLocation", android.view.View::class.java,
+                Int::class.javaPrimitiveType, Int::class.javaPrimitiveType, Int::class.javaPrimitiveType
+            )
+            m1.hookAfter { param ->
+                val pw = param.thisObject as? android.widget.PopupWindow ?: return@hookAfter
+                Handler(Looper.getMainLooper()).postDelayed({ runCatching { injectPopup(pw) } }, 300)
+            }
+        }
+        runCatching {
+            val m2 = cls.getDeclaredMethod("showAsDropDown", android.view.View::class.java)
+            m2.hookAfter { param ->
+                val pw = param.thisObject as? android.widget.PopupWindow ?: return@hookAfter
+                Handler(Looper.getMainLooper()).postDelayed({ runCatching { injectPopup(pw) } }, 300)
+            }
+        }
+    }
+
+    private fun injectPopup(pw: android.widget.PopupWindow) {
+        if (System.currentTimeMillis() - lastShareAt > 3 * 60 * 1000) return
+        val content = pw.contentView ?: return
+        if (content.findViewWithTag<View>(TAG) != null) return
+        val container = findShareContainer(content) ?: (content as? ViewGroup) ?: return
+        val context = content.context
+        val button = TextView(context).apply {
+            tag = TAG
+            text = "视频解析"
+            textSize = 13f
+            setTextColor(Color.parseColor("#E45757"))
+            setPadding(28, 20, 28, 20)
+            setOnClickListener {
+                val text = recentShareText()
+                if (text.isNullOrBlank()) {
+                    toast(context, "没有拿到视频链接，请先点一次「复制链接」再试")
+                } else {
+                    openParse(context, text)
+                }
+                runCatching { pw.dismiss() }
+            }
+        }
+        runCatching { container.addView(button) }
+    }
     private fun inject(dialog: android.app.Dialog) {
         val decor = dialog.window?.decorView ?: return
         if (decor.findViewWithTag<View>(TAG) != null) return
