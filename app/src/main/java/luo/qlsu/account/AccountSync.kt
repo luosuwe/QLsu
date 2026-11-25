@@ -11,6 +11,7 @@ import luo.qlsu.utils.qq.HostInfo
 import luo.qlsu.utils.qq.QQCurrentEnv
 import org.json.JSONObject
 import java.net.URLEncoder
+import kotlinx.coroutines.delay
 
 /**
  * 运行在 QQ / TIM 进程内（被模块注入）：
@@ -50,7 +51,14 @@ object AccountSync {
         val storedToken = prefs.getString(tokenKey(uin), "").orEmpty()
 
         // 只上报 QQ 号 + 模块版本 + 本地设备令牌；Cookie / skey / pskey / 机型等一律不出本机
-        val nick = runCatching { QQCurrentEnv.currentNickName.orEmpty() }.getOrDefault("")
+        // QQ 启动早期昵称可能还没加载出来，重试几次并清掉零宽字符
+        var nick = ""
+        for (attempt in 0 until 4) {
+            val raw = runCatching { QQCurrentEnv.currentNickName.orEmpty() }.getOrDefault("")
+            nick = raw.replace(Regex("[\\u200B-\\u200D\\uFEFF]"), "").trim()
+            if (nick.isNotBlank()) break
+            if (attempt < 3) runCatching { delay(1200L) }
+        }
         val body = buildString {
             append("uin=").append(encode(uin))
             append("&version=").append(encode(BuildConfig.VERSION_NAME))
