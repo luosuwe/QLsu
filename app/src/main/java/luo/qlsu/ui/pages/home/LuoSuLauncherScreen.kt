@@ -63,6 +63,8 @@ fun LuoSuLauncherScreen(
     onGroupClick: () -> Unit,
     onWebsiteClick: () -> Unit,
     onVideoParseClick: () -> Unit,
+    signTimeLabel: String,
+    onSignTimeClick: () -> Unit,
 ) {
     val colors = QLsuTheme.colors
 
@@ -145,6 +147,8 @@ fun LuoSuLauncherScreen(
                 onSettings = onOpenSettings,
                 onSchedule = onOpenSchedule,
                 onVideo = onVideoParseClick,
+                signTimeLabel = signTimeLabel,
+                onSignTime = onSignTimeClick,
             )
 
             // ---------- 界面动画开关 ----------
@@ -190,6 +194,8 @@ private fun QuickEntriesCard(
     onSettings: () -> Unit,
     onSchedule: () -> Unit,
     onVideo: () -> Unit,
+    signTimeLabel: String,
+    onSignTime: () -> Unit,
 ) {
     val colors = QLsuTheme.colors
     Column(
@@ -205,6 +211,8 @@ private fun QuickEntriesCard(
         QuickRow("定时任务", false, onSchedule)
         QuickDivider()
         QuickRow("视频解析", false, onVideo)
+        QuickDivider()
+        QuickRow("签到时间（每日 $signTimeLabel）", false, onSignTime)
     }
 }
 
