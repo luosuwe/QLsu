@@ -36,7 +36,17 @@ object SignHonorOfKings : BaseSignInItem("王者营地签到")
 /** 把开关状态同步到 AutoDaily 的每日调度（只在 QQ 进程里调用） */
 object SignInSync {
 
-    private const val CRON = "0 0 8 * * *"
+    private const val PREFS = "QLsu_Config_global"
+
+    /** 每日执行时间，默认 00:00，可在模块里设置 */
+    private fun cron(): String {
+        val prefs = runCatching {
+            luo.qlsu.utils.qq.HostInfo.hostContext.getSharedPreferences(PREFS, android.content.Context.MODE_MULTI_PROCESS)
+        }.getOrNull()
+        val h = prefs?.getInt("sign_hour", 0) ?: 0
+        val m = prefs?.getInt("sign_min", 0) ?: 0
+        return "0 $m $h * * *"
+    }
 
     val all: List<BaseSignInItem> = listOf(
         SignQqVip, SignSvip, SignBigVip, SignYellowDiamond,
@@ -49,7 +59,7 @@ object SignInSync {
                 val id = item.taskId
                 if (item.isEnable) {
                     if (ScheduledTaskStore.find(id) == null) {
-                        ScheduledTaskStore.add(id, CRON)
+                        ScheduledTaskStore.add(id, cron())
                     }
                     ScheduledTaskStore.setEnabled(id, true)
                 } else if (ScheduledTaskStore.find(id) != null) {
