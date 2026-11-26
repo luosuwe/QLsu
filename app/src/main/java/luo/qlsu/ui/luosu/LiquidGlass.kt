@@ -41,7 +41,7 @@ import kotlin.math.max
  */
 fun Modifier.liquidGlass(
     shape: Shape = RoundedCornerShape(14.dp),
-    blurPx: Float = 30f,
+    blurPx: Float = 8f,
 ): Modifier = composed {
     var posInRoot by remember { mutableStateOf(Offset.Zero) }
     val darkTheme = QLsuTheme.colors.isDark
@@ -59,8 +59,18 @@ fun Modifier.liquidGlass(
             spotColor = Color(0x1F0F172A)
         )
         .drawBehind {
-            val bmp = frost ?: sharp ?: return@drawBehind
-            if (screenW <= 0 || screenH <= 0) return@drawBehind
+            val bmp = frost ?: sharp
+            if (bmp == null || screenW <= 0 || screenH <= 0) {
+                // QQ 进程里读不到模块 App 的壁纸：退化成高白度玻璃，保证卡片可见
+                val outline0 = shape.createOutline(size, layoutDirection, this)
+                val path0 = Path().apply { addOutline(outline0) }
+                drawPath(
+                    path0,
+                    color = if (darkTheme) Color(0xE61A1719) else Color(0xE6FFFFFF)
+                )
+                drawPath(path0, color = Color.White.copy(alpha = if (darkTheme) 0.10f else 0.55f), style = Stroke(1.dp.toPx()))
+                return@drawBehind
+            }
 
             val outline = shape.createOutline(size, layoutDirection, this)
             val path = Path().apply { addOutline(outline) }
@@ -124,5 +134,5 @@ fun Modifier.liquidGlass(
 fun Modifier.glassSurface(
     shape: Shape = RoundedCornerShape(14.dp),
     tintAlpha: Float = 0.0f,
-    blurRadius: Dp = 30.dp,
+    blurRadius: Dp = 8.dp,
 ): Modifier = liquidGlass(shape, blurRadius.value)
