@@ -60,12 +60,14 @@ fun LuoSuGlassRoot(modifier: Modifier = Modifier, content: @Composable () -> Uni
 @Composable
 fun Modifier.glassSurface(
     shape: Shape = RoundedCornerShape(14.dp),
-    blurRadius: Dp = 24.dp,
+    blurRadius: Dp = 15.dp,
     tintAlpha: Float = 0.72f,
 ): Modifier {
     val dark = QLsuTheme.colors.isDark
     // 液态玻璃：低不透明度填充 + 白色描边 + 左上高光
-    val fill = if (dark) Color(0xFF161617).copy(alpha = 0.55f) else Color.White.copy(alpha = 0.26f)
+    // 模糊强度换算成磨砂不透明度：15 -> 亮色约 0.49，暗色约 0.70
+    val frost = (blurRadius.value / 100f).coerceIn(0f, 0.35f)
+    val fill = if (dark) Color(0xFF121214).copy(alpha = 0.55f + frost) else Color.White.copy(alpha = 0.34f + frost)
     val stroke = if (dark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.55f)
     val highlight = Brush.linearGradient(
         colors = listOf(
