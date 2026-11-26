@@ -122,7 +122,7 @@ object Wallpaper {
             val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
             if (bmp != null) {
                 sharp = bmp
-                frost = makeFrost(bmp, 30f)
+                frost = makeFrost(bmp, 8f)
             }
             bmp?.asImageBitmap()
         }.getOrNull()
