@@ -31,6 +31,7 @@ abstract class BaseComposeActivity : ComponentActivity() {
         enableEdgeToEdge()
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setupTransparentStatusBar()
+        window.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.parseColor("#F4F6F9")))
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         
         themeMode = ThemeHelper.getThemeMode()
