@@ -25,13 +25,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -81,7 +83,19 @@ fun Modifier.glassSurface(
         )
         .background(fill, shape)
         .background(highlight, shape)
-        .border(1.dp, stroke, shape)
+        .drawBehind {
+            val outline = shape.createOutline(size, layoutDirection, this)
+            drawOutline(
+                outline = outline,
+                brush = Brush.linearGradient(
+                    listOf(
+                        Color.White.copy(alpha = if (dark) 0.22f else 0.75f),
+                        Color.White.copy(alpha = if (dark) 0.05f else 0.15f)
+                    )
+                ),
+                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.dp.toPx())
+            )
+        }
 }
 
 /** 玻璃圆形返回键（不是文字按钮） */
