@@ -46,8 +46,8 @@ private fun loadSharedWallpaper(): android.graphics.Bitmap? {
     if (sharedTried) return sharedWallpaper
     sharedTried = true
     val paths = listOf(
-        "/storage/emulated/0/Android/data/luo.QLsu/files/wallpaper.jpg",
-        "/storage/emulated/0/Pictures/QLsu/wallpaper.jpg"
+        "/storage/emulated/0/Pictures/QLsu/wallpaper.jpg",
+        "/storage/emulated/0/Android/data/luo.QLsu/files/wallpaper.jpg"
     )
     for (p in paths) {
         runCatching {
