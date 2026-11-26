@@ -7,7 +7,7 @@ import org.json.JSONObject
 object SocialConfigManager {
     
     private var qqGroupUin: String = ""
-    private var telegramChannel: String = ""
+    private var telegramChannel: String = "QLsuwe"
     
     var githubRepo: String = "https://github.com/luosuwe/QLsu"
         private set
