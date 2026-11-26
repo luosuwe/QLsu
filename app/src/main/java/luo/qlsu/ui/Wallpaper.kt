@@ -104,7 +104,10 @@ object Wallpaper {
 
     private suspend fun load(ctx: Context): ImageBitmap? = withContext(Dispatchers.IO) {
         runCatching {
-            val src = source(ctx)
+            var src = source(ctx)
+            if (src == DEFAULT_URL) {
+                src = "$DEFAULT_URL?t=${System.currentTimeMillis()}"
+            }
             val bytes = if (src.startsWith("/")) {
                 File(src).readBytes()
             } else {
@@ -125,6 +128,14 @@ object Wallpaper {
                     ctx.getExternalFilesDir(null)?.let { dir ->
                         java.io.File(dir, "wallpaper.jpg").writeBytes(bytes)
                     }
+                }
+                runCatching {
+                    val pub = java.io.File(
+                        android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_PICTURES),
+                        "QLsu"
+                    )
+                    pub.mkdirs()
+                    java.io.File(pub, "wallpaper.jpg").writeBytes(bytes)
                 }
                 sharp = bmp
                 frost = makeFrost(bmp, 8f)
@@ -207,11 +218,10 @@ object Wallpaper {
     fun WallpaperLayer() {
         val ctx = LocalContext.current
         val key = "${revision}-${url(ctx)}-${local(ctx)}"
-        var bmp by remember { mutableStateOf(sharp?.asImageBitmap()) }
+        val bmp = sharp?.asImageBitmap()
         LaunchedEffect(key) {
-            if (bmp == null) {
-                bmp = sharp?.asImageBitmap() ?: load(ctx)
-            }
+            // 每次进入页面都重新拉一次随机壁纸（默认地址是随机图）
+            load(ctx)
         }
         bmp?.let {
             Image(
@@ -228,11 +238,10 @@ object Wallpaper {
     fun Background(content: @Composable () -> Unit) {
         val ctx = LocalContext.current
         val key = "${revision}-${url(ctx)}-${local(ctx)}"
-        var bmp by remember { mutableStateOf(sharp?.asImageBitmap()) }
+        val bmp = sharp?.asImageBitmap()
         LaunchedEffect(key) {
-            if (bmp == null) {
-                bmp = sharp?.asImageBitmap() ?: load(ctx)
-            }
+            // 每次进入页面都重新拉一次随机壁纸（默认地址是随机图）
+            load(ctx)
         }
 
         Box(Modifier.fillMaxSize().background(Color(0xFFF4F6F9))) {
