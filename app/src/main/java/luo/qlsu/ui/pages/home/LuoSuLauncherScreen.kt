@@ -22,11 +22,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -98,28 +101,22 @@ fun LuoSuLauncherScreen(
                         color = colors.textSecondary
                     )
                 }
-                AccountAvatar(account = account, onClick = onUserCenterClick)
             }
 
             // ---------- 主视觉 ----------
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(Dimens.CardCornerRadiusLarge))
-                    .background(
-                        Brush.linearGradient(
-                            listOf(Color(0xFFE9497E), Color(0xFFF07AA0), Color(0xFFF7A8C2))
-                        )
-                    )
+                    .glassSurface(RoundedCornerShape(Dimens.CardCornerRadiusLarge))
                     .padding(18.dp)
             ) {
                 Column {
-                    Text("QQ / TIM 多功能模块", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("QQ / TIM 多功能模块", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = colors.textPrimary)
                     Spacer(Modifier.height(4.dp))
                     Text(
                         "多功能 + 独立定时任务 · 洛苏 UI",
                         fontSize = 12.sp,
-                        color = Color.White.copy(alpha = 0.9f)
+                        color = colors.textSecondary
                     )
                     Spacer(Modifier.height(12.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -277,12 +274,7 @@ private fun AccountCard(account: AccountInfo?, onUserCenterClick: () -> Unit) {
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    account?.initials ?: "QL",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+                QqAvatar(account?.uin.orEmpty(), Modifier.matchParentSize())
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
@@ -363,5 +355,31 @@ private fun LinkPill(text: String, onClick: () -> Unit) {
             .padding(horizontal = 14.dp, vertical = 7.dp)
     ) {
         Text(text, fontSize = 11.sp, color = colors.textPrimary)
+    }
+}
+
+
+@Composable
+private fun QqAvatar(uin: String, modifier: Modifier = Modifier) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val bmp by androidx.compose.runtime.produceState<androidx.compose.ui.graphics.ImageBitmap?>(
+        initialValue = null, uin
+    ) {
+        if (uin.isBlank()) return@produceState
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching {
+                val conn = (java.net.URL("https://q1.qlogo.cn/g?b=qq&nk=$uin&s=160").openConnection() as java.net.HttpURLConnection).apply {
+                    connectTimeout = 8000
+                    readTimeout = 12000
+                    setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 13)")
+                }
+                val bytes = conn.inputStream.use { it.readBytes() }
+                android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                    ?.asImageBitmap()
+            }.getOrNull()
+        }
+    }
+    if (bmp != null) {
+        Image(bitmap = bmp!!, contentDescription = null, modifier = modifier, contentScale = ContentScale.Crop)
     }
 }
