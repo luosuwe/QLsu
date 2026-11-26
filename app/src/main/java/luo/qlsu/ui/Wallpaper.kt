@@ -25,6 +25,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
@@ -120,7 +121,7 @@ object Wallpaper {
             Image(
                 bitmap = it,
                 contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().blur(8.dp),
                 contentScale = ContentScale.Crop
             )
             Box(Modifier.fillMaxSize().background(Color.White.copy(alpha = 0.42f)))
@@ -171,11 +172,11 @@ fun WallpaperButton(modifier: Modifier = Modifier) {
         painter = androidx.compose.ui.res.painterResource(luo.qlsu.R.drawable.ic_wallpaper),
         contentDescription = "自定义背景",
         modifier = modifier
-            .size(38.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color.Black.copy(alpha = 0.05f))
+            .size(36.dp)
+            .clip(androidx.compose.foundation.shape.CircleShape)
+            .background(Color.White.copy(alpha = 0.55f))
             .clickable { show = true }
-            .padding(9.dp)
+            .padding(8.dp)
     )
 
     if (show) {
