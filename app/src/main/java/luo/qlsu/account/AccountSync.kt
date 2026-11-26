@@ -41,7 +41,17 @@ object AccountSync {
             val prefs = QQCurrentEnv.globalPreference
             val now = System.currentTimeMillis()
             if (!force && now - prefs.getLong(KEY_LAST_SYNC, 0L) < SYNC_INTERVAL_MS) return
-            ModuleScope.launchIO(TAG) { doSync() }
+            ModuleScope.launchIO(TAG) {
+                // QQ/TIM 启动早期可能还没拿到账号，等登录完成后重试
+                for (attempt in 0 until 12) {
+                    if (currentUin() != null) {
+                        doSync()
+                        return@launchIO
+                    }
+                    delay(5000L)
+                }
+                Log.w(TAG, "未获取到当前 QQ 号（TIM 可能尚未登录）")
+            }
         }.onFailure { Log.w(TAG, "sync failed: ${it.message}") }
     }
 
