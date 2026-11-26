@@ -61,8 +61,13 @@ object AdEngine {
                     set(java.util.Calendar.SECOND, 0)
                     set(java.util.Calendar.MILLISECOND, 0)
                 }
+                val prefs = luo.qlsu.utils.qq.HostInfo.hostContext.getSharedPreferences(
+                    "QLsu_Config_global", android.content.Context.MODE_MULTI_PROCESS
+                )
+                val key = "catchup_${st.id}_$today"
                 val ranToday = st.lastRunAt > 0 && fmt.format(java.util.Date(st.lastRunAt)) == today
-                if (!ranToday && now.timeInMillis >= sched.timeInMillis) {
+                if (!ranToday && !prefs.getBoolean(key, false) && now.timeInMillis >= sched.timeInMillis) {
+                    prefs.edit().putBoolean(key, true).apply()
                     runTask(st.id) { _, _ -> }
                     ScheduledTaskStore.markRun(st.id, System.currentTimeMillis())
                 }
