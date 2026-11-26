@@ -121,6 +121,11 @@ object Wallpaper {
             }
             val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
             if (bmp != null) {
+                runCatching {
+                    ctx.getExternalFilesDir(null)?.let { dir ->
+                        java.io.File(dir, "wallpaper.jpg").writeBytes(bytes)
+                    }
+                }
                 sharp = bmp
                 frost = makeFrost(bmp, 8f)
             }
@@ -202,8 +207,12 @@ object Wallpaper {
     fun WallpaperLayer() {
         val ctx = LocalContext.current
         val key = "${revision}-${url(ctx)}-${local(ctx)}"
-        var bmp by remember(key) { mutableStateOf<ImageBitmap?>(null) }
-        LaunchedEffect(key) { bmp = load(ctx) }
+        var bmp by remember { mutableStateOf(sharp?.asImageBitmap()) }
+        LaunchedEffect(key) {
+            if (bmp == null) {
+                bmp = sharp?.asImageBitmap() ?: load(ctx)
+            }
+        }
         bmp?.let {
             Image(
                 bitmap = it,
@@ -219,8 +228,12 @@ object Wallpaper {
     fun Background(content: @Composable () -> Unit) {
         val ctx = LocalContext.current
         val key = "${revision}-${url(ctx)}-${local(ctx)}"
-        var bmp by remember(key) { mutableStateOf<ImageBitmap?>(null) }
-        LaunchedEffect(key) { bmp = load(ctx) }
+        var bmp by remember { mutableStateOf(sharp?.asImageBitmap()) }
+        LaunchedEffect(key) {
+            if (bmp == null) {
+                bmp = sharp?.asImageBitmap() ?: load(ctx)
+            }
+        }
 
         Box(Modifier.fillMaxSize().background(Color(0xFFF4F6F9))) {
             bmp?.let {
