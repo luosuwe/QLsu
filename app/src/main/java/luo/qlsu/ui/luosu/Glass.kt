@@ -159,8 +159,9 @@ fun LuoSuGlassRoot(content: @Composable () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Transparent)
+            .background(Color(0xFFF4F6F9))
     ) {
+        luo.qlsu.ui.Wallpaper.WallpaperLayer()
         content()
     }
 }
