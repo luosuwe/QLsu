@@ -56,9 +56,7 @@ fun LuoSuLauncherScreen(
     isActivated: Boolean,
     frameworkInfo: String,
     account: AccountInfo?,
-    motionEnabled: Boolean,
     onUserCenterClick: () -> Unit,
-    onMotionToggle: (Boolean) -> Unit,
     onOpenSettings: () -> Unit,
     onOpenSchedule: () -> Unit,
     onGithubClick: () -> Unit,
@@ -141,25 +139,6 @@ fun LuoSuLauncherScreen(
                 onSettings = onOpenSettings,
                 onSchedule = onOpenSchedule,
             )
-
-            // ---------- 界面动画开关 ----------
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .glassSurface(RoundedCornerShape(Dimens.CardCornerRadius))
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(Modifier.weight(1f)) {
-                    Text("界面过渡动画", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = colors.textPrimary)
-                    Text(
-                        if (motionEnabled) "开关页面时播放进入 / 返回动画" else "关闭：切换页面不播放进入 / 返回动画",
-                        fontSize = 11.sp,
-                        color = colors.textSecondary
-                    )
-                }
-                QLsuSwitch(checked = motionEnabled, onCheckedChange = onMotionToggle)
-            }
 
             SecondaryButton("官网下载 qlsu.luosu.top", onWebsiteClick)
 
