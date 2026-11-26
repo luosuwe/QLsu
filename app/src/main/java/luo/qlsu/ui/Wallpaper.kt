@@ -34,6 +34,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import luo.qlsu.ui.luosu.glassSurface
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -121,7 +122,7 @@ object Wallpaper {
             Image(
                 bitmap = it,
                 contentDescription = null,
-                modifier = Modifier.fillMaxSize().blur(8.dp),
+                modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
             Box(Modifier.fillMaxSize().background(Color.White.copy(alpha = 0.42f)))
@@ -173,8 +174,8 @@ fun WallpaperButton(modifier: Modifier = Modifier) {
         contentDescription = "自定义背景",
         modifier = modifier
             .size(36.dp)
+            .glassSurface(androidx.compose.foundation.shape.CircleShape, tintAlpha = 0.9f)
             .clip(androidx.compose.foundation.shape.CircleShape)
-            .background(Color.White.copy(alpha = 0.55f))
             .clickable { show = true }
             .padding(8.dp)
     )
