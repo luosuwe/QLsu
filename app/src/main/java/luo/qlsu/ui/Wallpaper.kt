@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,6 +48,23 @@ import java.net.URL
  * 本地图片复制到 App 私有目录后直接使用。
  */
 object Wallpaper {
+
+    var sharp by androidx.compose.runtime.mutableStateOf<android.graphics.Bitmap?>(null)
+        private set
+    var frost by androidx.compose.runtime.mutableStateOf<android.graphics.Bitmap?>(null)
+        private set
+    var layerWidth by androidx.compose.runtime.mutableIntStateOf(0)
+        private set
+    var layerHeight by androidx.compose.runtime.mutableIntStateOf(0)
+        private set
+
+    fun setLayerSize(w: Int, h: Int) {
+        if (w != layerWidth || h != layerHeight) {
+            layerWidth = w
+            layerHeight = h
+        }
+    }
+
 
     var revision by androidx.compose.runtime.mutableIntStateOf(0)
 
@@ -101,8 +119,25 @@ object Wallpaper {
                 }
                 conn.inputStream.use { it.readBytes() }
             }
-            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.asImageBitmap()
+            val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            if (bmp != null) {
+                sharp = bmp
+                frost = makeFrost(bmp, 30f)
+            }
+            bmp?.asImageBitmap()
         }.getOrNull()
+    }
+
+    private fun makeFrost(src: android.graphics.Bitmap, radius: Float): android.graphics.Bitmap {
+        // 用「缩小再放大」近似 30px 高斯模糊，兼容所有版本
+        val factor = (radius / 2.5f).toInt().coerceIn(6, 16)
+        val small = android.graphics.Bitmap.createScaledBitmap(
+            src,
+            (src.width / factor).coerceAtLeast(1),
+            (src.height / factor).coerceAtLeast(1),
+            true
+        )
+        return android.graphics.Bitmap.createScaledBitmap(small, src.width, src.height, true)
     }
 
     fun copyToLocal(ctx: Context, file: File): String? = runCatching {
@@ -122,7 +157,7 @@ object Wallpaper {
             Image(
                 bitmap = it,
                 contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().onSizeChanged { setLayerSize(it.width, it.height) },
                 contentScale = ContentScale.Crop
             )
             Box(Modifier.fillMaxSize().background(Color.White.copy(alpha = 0.42f)))
