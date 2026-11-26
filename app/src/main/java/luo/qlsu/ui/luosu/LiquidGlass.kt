@@ -39,6 +39,27 @@ import kotlin.math.max
  * 液态玻璃：卡片本身透明，用壁纸的模糊副本按卡片位置裁切，
  * 再叠白色描边 + 顶部内高光 + 底部内发光 + 外阴影，对齐后台的 liquid glass。
  */
+private var sharedWallpaper: android.graphics.Bitmap? = null
+private var sharedTried = false
+
+private fun loadSharedWallpaper(): android.graphics.Bitmap? {
+    if (sharedTried) return sharedWallpaper
+    sharedTried = true
+    val paths = listOf(
+        "/storage/emulated/0/Android/data/luo.QLsu/files/wallpaper.jpg",
+        "/storage/emulated/0/Pictures/QLsu/wallpaper.jpg"
+    )
+    for (p in paths) {
+        runCatching {
+            if (java.io.File(p).isFile) {
+                sharedWallpaper = android.graphics.BitmapFactory.decodeFile(p)
+                if (sharedWallpaper != null) return sharedWallpaper
+            }
+        }
+    }
+    return null
+}
+
 fun Modifier.liquidGlass(
     shape: Shape = RoundedCornerShape(14.dp),
     blurPx: Float = 8f,
@@ -68,6 +89,21 @@ fun Modifier.liquidGlass(
                     path0,
                     color = if (darkTheme) Color(0xE61A1719) else Color(0xE6FFFFFF)
                 )
+                // QQ 进程：尝试读模块导出的壁纸，做同样的玻璃底
+                loadSharedWallpaper()?.let { wall ->
+                    drawIntoCanvas { canvas ->
+                        val native = canvas.nativeCanvas
+                        val paint = Paint(Paint.FILTER_BITMAP_FLAG)
+                        native.save()
+                        native.clipPath(path0.asAndroidPath())
+                        val scale = max(screenW.toFloat() / wall.width, screenH.toFloat() / wall.height).coerceAtLeast(0.0001f)
+                        val dw = wall.width * scale
+                        val dh = wall.height * scale
+                        native.drawBitmap(wall, null, RectF(0f, 0f, dw, dh), paint)
+                        native.restore()
+                    }
+                    drawPath(path0, color = if (darkTheme) Color(0x991A1719) else Color(0x99FFFFFF))
+                }
                 drawPath(path0, color = Color.White.copy(alpha = if (darkTheme) 0.10f else 0.55f), style = Stroke(1.dp.toPx()))
                 return@drawBehind
             }
