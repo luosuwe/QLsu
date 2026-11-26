@@ -1,5 +1,8 @@
 package luo.qlsu.autodaily.task.util
 
+import luo.qlsu.utils.qq.HostInfo
+
+
 import cn.hutool.core.util.ReUtil
 import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.YamlConfiguration
@@ -55,11 +58,11 @@ object ConfigUtil {
         info?.let {
             val currConfVer = loadSaveConf().version
             if (currConfVer < info.config.version) {
-                if (BuildConfig.VERSION_CODE >= info.config.needAppVersion) {
+                if (HostInfo.versionCode >= info.config.needAppVersion) {
                     updateConfig(showToast)
                 }
             }
-            if (BuildConfig.VERSION_CODE < info.app.versionCode) {
+            if (HostInfo.versionCode < info.app.versionCode) {
                 if (showToast) {
                     ToastUtil.send("插件版本存在更新")
                 }
@@ -81,7 +84,7 @@ object ConfigUtil {
             }
             val minAppVersion = ReUtil.getGroup1(MIN_APP_VERSION_REG, res)?.toInt() ?: 0
             val confVersion = ReUtil.getGroup1(CONFIG_VERSION_REG, res)?.toInt() ?: 0
-            if (minAppVersion > BuildConfig.VERSION_CODE) {
+            if (minAppVersion > HostInfo.versionCode) {
                 if (showToast) {
                     ToastUtil.send("插件版本号低于${minAppVersion}，无法使用v${confVersion}版本的配置", true)
                 }
@@ -146,7 +149,7 @@ object ConfigUtil {
 
     private fun parseConfText(text: String): TaskProperties? = runCatching {
         val version = readMinVersion(text)
-        if (version > BuildConfig.VERSION_CODE) {
+        if (version > HostInfo.versionCode.toInt()) {
             LogUtil.i("任务库要求最低版本 $version，当前 ${BuildConfig.VERSION_CODE}")
             return null
         }
@@ -181,8 +184,8 @@ object ConfigUtil {
         return runRetry(3, 20) {
             decodeConfStr(encodeConfStr)?.let { decodeConfStr ->
                 val version = readMinVersion(decodeConfStr)
-                if (version > BuildConfig.VERSION_CODE) {
-                    LogUtil.i("模块版本过低，无法加载配置。配置要求最低版本: $version，当前版本: ${BuildConfig.VERSION_CODE}")
+                if (version > HostInfo.versionCode.toInt()) {
+                    LogUtil.i("模块版本过低，无法加载配置。配置要求最低版本: $version，当前版本: ${HostInfo.versionCode}")
                     return@let null
                 }
                 return@let confYaml.decodeFromString(TaskProperties.serializer(), decodeConfStr)
