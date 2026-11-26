@@ -39,6 +39,11 @@ object MainHook {
         runCatching { AdEngine.install() }
         // 把「签到」分类里各开关的状态写进 AutoDaily 的每日调度
         runCatching { SignInSync.applyAll() }
+        // 后台被杀了导致错过时间：启动后延迟 20 秒补跑当天未执行的任务
+        Thread {
+            runCatching { Thread.sleep(20000) }
+            runCatching { AdEngine.catchUpMissed() }
+        }.start()
         loadApiHook()
         initSwitchHookItem()
         hookAccountChange()
