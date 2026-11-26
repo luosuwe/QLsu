@@ -162,7 +162,6 @@ fun AdScheduleScreen(onBack: () -> Unit) {
             .background(Color.Transparent)
             .windowInsetsPadding(WindowInsets.statusBars)
     ) {
-        luo.qlsu.ui.Wallpaper.WallpaperLayer()
         Column(Modifier.fillMaxSize()) {
             Row(
                 modifier = Modifier
