@@ -54,11 +54,42 @@ object QQCurrentEnv {
         get() = "${HostInfo.moduleDataPath}$currentUin/"
 
     val currentUin: String
-        get() = runCatching {
-            qQAppInterface.currentUin
-        }.getOrElse {
-            globalPreference.getString("currentUin", "global")!!
+        get() {
+            // QQ / TIM 通用：多种方式取当前 QQ 号，取到纯数字才算有效
+            candidates().forEach { value ->
+                val uin = value?.trim().orEmpty()
+                if (uin.matches(Regex("^\\d{4,12}$"))) return uin
+            }
+            return globalPreference.getString("currentUin", "").orEmpty()
         }
+
+    private fun candidates(): List<String?> {
+        val list = mutableListOf<String?>()
+        list.add(runCatching { qQAppInterface.currentUin }.getOrNull())
+        list.add(runCatching {
+            val cls = Class.forName("com.tencent.mobileqq.app.MobileQQ", false, luo.qlsu.utils.reflect.ClassUtils.hostClassLoader)
+            val mobileQQ = cls.getMethod("getMobileQQ").invoke(null)
+            val runtime = runCatching { cls.getMethod("peekAppRuntime").invoke(mobileQQ) }
+                .getOrElse { cls.getMethod("getAppRuntime").invoke(mobileQQ) }
+            val names = listOf("getCurrentAccountUin", "getAccount", "getCurrentUin", "getUin")
+            names.firstNotNullOfOrNull { name ->
+                runCatching {
+                    runtime?.javaClass?.methods
+                        ?.firstOrNull { it.name == name && it.parameterCount == 0 }
+                        ?.invoke(runtime) as? String
+                }.getOrNull()?.takeIf { it.isNotBlank() }
+            }
+        }.getOrNull())
+        list.add(runCatching {
+            HostInfo.hostContext.getSharedPreferences("com.tencent.mobileqq_preferences", 0)
+                .getString("uin", null)
+        }.getOrNull())
+        list.add(runCatching {
+            HostInfo.hostContext.getSharedPreferences("com.tencent.mobileqq_preferences", 0)
+                .getString("last_login_uin", null)
+        }.getOrNull())
+        return list
+    }
 
     val currentNickName: String?
         get() = qQAppInterface.currentNickname
