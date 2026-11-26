@@ -11,6 +11,7 @@ import luo.qlsu.hook.base.BaseApiHookItem
 import luo.qlsu.hook.base.BaseClickableHookItem
 import luo.qlsu.hook.base.BaseSwitchHookItem
 import luo.qlsu.hook.base.Listener
+import luo.qlsu.hook.compat.QfunCompat
 import luo.qlsu.plugin.MainPlugin
 import luo.qlsu.ui.pages.configs.ConfigUiRegistry
 import luo.qlsu.utils.hook.hookAfter
@@ -54,6 +55,11 @@ object MainHook {
     private fun loadApiHook() = apiHookItemList
         .forEach {
             try {
+                // QFun 也 Hook 同一批方法时会互相覆盖，检测到 QFun 就让出重叠功能
+                if (QfunCompat.shouldYield(it.name)) {
+                    QfunCompat.logYield(it.name)
+                    return@forEach
+                }
                 if (it.isInTargetProcess()) it.loadHook()
             } catch (t: Throwable) {
                 LogUtils.e(it, t)
@@ -72,7 +78,13 @@ object MainHook {
             }
     }
 
-    private fun initSwitchHookItem() = switchHookItemList.forEach(BaseSwitchHookItem::init)
+    private fun initSwitchHookItem() = switchHookItemList.forEach {
+        if (QfunCompat.shouldYield(it.name)) {
+            QfunCompat.logYield(it.name)
+        } else {
+            it.init()
+        }
+    }
 
     fun processDataForCurrent(tag: String) = clickableHookItemList
         .filter(BaseSwitchHookItem::isAvailable)
