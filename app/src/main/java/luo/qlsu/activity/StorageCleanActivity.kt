@@ -183,6 +183,7 @@ class StorageCleanActivity : BaseComposeActivity() {
                 .fillMaxSize()
                 .background(androidx.compose.ui.graphics.Color.Transparent)
         ) {
+            luo.qlsu.ui.Wallpaper.WallpaperLayer()
             Column(
                 modifier = Modifier
                     .fillMaxSize()
