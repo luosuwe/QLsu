@@ -32,6 +32,7 @@ import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import luo.qlsu.ui.Wallpaper
+import luo.qlsu.ui.core.theme.QLsuTheme
 import kotlin.math.max
 
 /**
@@ -43,6 +44,7 @@ fun Modifier.liquidGlass(
     blurPx: Float = 30f,
 ): Modifier = composed {
     var posInRoot by remember { mutableStateOf(Offset.Zero) }
+    val darkTheme = QLsuTheme.colors.isDark
     val frost = Wallpaper.frost
     val sharp = Wallpaper.sharp
     val screenW = Wallpaper.layerWidth
@@ -78,6 +80,24 @@ fun Modifier.liquidGlass(
                 native.restore()
             }
 
+            // 白色玻璃层：参考站卡片其实是「磨砂 + 高白度渐变」，不是直接透壁纸
+            val dark = darkTheme
+            if (dark) {
+                drawRect(brush = Brush.verticalGradient(listOf(Color(0xF01A1719), Color(0xE01A1719))))
+            } else {
+                drawRect(
+                    brush = Brush.verticalGradient(
+                        listOf(Color.White.copy(alpha = 0.80f), Color.White.copy(alpha = 0.66f))
+                    )
+                )
+                drawRect(
+                    brush = Brush.linearGradient(
+                        listOf(Color(0x33FFD9E6), Color(0x11FFE9F2), Color.Transparent),
+                        start = Offset.Zero,
+                        end = Offset(size.width, size.height)
+                    )
+                )
+            }
             // 描边 72% 白
             drawPath(path, color = Color.White.copy(alpha = 0.72f), style = Stroke(width = 1.dp.toPx()))
             // 顶部内高光
