@@ -116,7 +116,6 @@ fun LuoSuSettingsScreen(
     ) {
         luo.qlsu.ui.Wallpaper.WallpaperLayer()
         Column(modifier = Modifier.fillMaxSize()) {
-            luo.qlsu.ui.WallpaperButton(modifier = androidx.compose.ui.Modifier.padding(start = 12.dp, top = 4.dp))
             BrandHeader(
                 versionInfo = versionInfo,
                 isDarkTheme = isDarkTheme,
@@ -243,6 +242,8 @@ private fun BrandHeader(
                 maxLines = 1
             )
         }
+        luo.qlsu.ui.WallpaperButton()
+        Spacer(Modifier.width(8.dp))
         GlassIconButton(
             painter = painterResource(R.drawable.ic_search),
             onClick = onToggleSearch
