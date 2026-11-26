@@ -45,6 +45,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
@@ -195,9 +196,7 @@ fun PluginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                color = colors.background
-            )
+            .background(Color.Transparent)
             .pointerInput(key1 = Unit) {
                 awaitEachGesture {
 
@@ -211,6 +210,7 @@ fun PluginScreen(
                 connection = nestedScrollConnection
             )
     ) {
+        luo.qlsu.ui.Wallpaper.WallpaperLayer()
         Column(
             modifier = Modifier
                 .fillMaxSize()
