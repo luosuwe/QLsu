@@ -3,6 +3,7 @@ package luo.qlsu.ui.components.dialogs
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -33,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -61,7 +63,8 @@ fun BaseDialogSurface(
             .padding(horizontal = 32.dp)
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .glassSurface(RoundedCornerShape(24.dp))
+            .background(if (colors.isDark) Color(0xF21C1C1E) else Color(0xFAFFFFFF))
+            .border(1.dp, colors.textSecondary.copy(0.12f), RoundedCornerShape(24.dp))
             .padding(Dimens.PaddingLarge)
     ) {
         Text(
