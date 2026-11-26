@@ -1,6 +1,8 @@
 package luo.qlsu.activity
 
 import android.content.Intent
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.Modifier
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -84,18 +86,29 @@ class SettingActivity : BaseComposeActivity() {
                         onBackClick = ::finish
                     ) }
 
-                    ConfirmDialog(
-                        visible = vm.showDonateDialog,
-                        title = "支持作者",
-                        message = "如果您觉得这个模块好用，可以请作者喝一杯咖啡☕\n您的支持是我更新的动力！",
-                        confirmText = "前往支持",
-                        dismissText = "下次一定",
-                        onDismiss = vm::dismissDonate,
-                        onConfirm = {
-                            vm.dismissDonate()
-                            openUrl("http://127.0.0.1/")
-                        }
-                    )
+                    if (vm.showDonateDialog) {
+                        androidx.compose.material3.AlertDialog(
+                            onDismissRequest = vm::dismissDonate,
+                            title = { androidx.compose.material3.Text("支持作者") },
+                            text = {
+                                androidx.compose.foundation.layout.Column {
+                                    androidx.compose.foundation.Image(
+                                        painter = androidx.compose.ui.res.painterResource(luo.qlsu.R.drawable.donate_qr),
+                                        contentDescription = "赞助二维码",
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                    androidx.compose.material3.Text(
+                                        "微信扫码赞助，感谢支持",
+                                    )
+                                }
+                            },
+                            confirmButton = {
+                                androidx.compose.material3.TextButton(onClick = vm::dismissDonate) {
+                                    androidx.compose.material3.Text("关闭")
+                                }
+                            }
+                        )
+                    }
 
                     ConfirmDialog(
                         visible = vm.showRestartDialog,
