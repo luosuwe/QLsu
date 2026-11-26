@@ -40,6 +40,36 @@ object AdEngine {
 
     private const val WAIT_LIMIT_MS = 120_000L
 
+
+    /**
+     * 补跑：当天已过设定时间、但 lastRunAt 不是今天的启用任务，立即执行一次。
+     * 用于后台被系统杀掉导致错过定时的情况。
+     */
+    fun catchUpMissed() {
+        val tz = java.util.TimeZone.getTimeZone("GMT+8")
+        val fmt = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.CHINA).apply { timeZone = tz }
+        val now = java.util.Calendar.getInstance(tz)
+        val today = fmt.format(now.time)
+        ScheduledTaskStore.list().filter { it.enabled }.forEach { st ->
+            runCatching {
+                val parts = st.cron.split(" ")
+                val h = parts.getOrNull(2)?.toIntOrNull() ?: 0
+                val m = parts.getOrNull(1)?.toIntOrNull() ?: 0
+                val sched = java.util.Calendar.getInstance(tz).apply {
+                    set(java.util.Calendar.HOUR_OF_DAY, h)
+                    set(java.util.Calendar.MINUTE, m)
+                    set(java.util.Calendar.SECOND, 0)
+                    set(java.util.Calendar.MILLISECOND, 0)
+                }
+                val ranToday = st.lastRunAt > 0 && fmt.format(java.util.Date(st.lastRunAt)) == today
+                if (!ranToday && now.timeInMillis >= sched.timeInMillis) {
+                    runTask(st.id) { _, _ -> }
+                    ScheduledTaskStore.markRun(st.id, System.currentTimeMillis())
+                }
+            }
+        }
+    }
+
     fun install() {
         if (HostInfo.processName != HostInfo.packageName) return
         if (installed) return
