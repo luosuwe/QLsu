@@ -40,65 +40,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import luo.qlsu.ui.core.theme.QLsuTheme
 
-/**
- * 毛玻璃（frosted glass）风格：
- * 浅色纯白背景 + 白色半透明卡片 + 细边 + 投影；暗色近黑背景 + 深灰卡片。
- * 不使用液态玻璃的折射/模糊着色器。
- */
-@Composable
-fun LuoSuGlassRoot(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-    val dark = QLsuTheme.colors.isDark
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(if (dark) Color(0xFF0B090A) else Color(0xFFF5F5F7))
-    ) {
-        content()
-    }
-}
-
-@Composable
-fun Modifier.glassSurface(
-    shape: Shape = RoundedCornerShape(14.dp),
-    blurRadius: Dp = 30.dp,
-    tintAlpha: Float = 0.72f,
-): Modifier {
-    val dark = QLsuTheme.colors.isDark
-    // 液态玻璃：低不透明度填充 + 白色描边 + 左上高光
-    // 模糊强度换算成磨砂不透明度：15 -> 亮色约 0.49，暗色约 0.70
-    val fill = if (dark) Color(0xFF181617).copy(alpha = 0.72f) else Color.White.copy(alpha = 0.86f)
-    val stroke = if (dark) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.34f)
-    val highlight = Brush.linearGradient(
-        colors = listOf(
-            Color.White.copy(alpha = if (dark) 0.10f else 0.30f),
-            Color.White.copy(alpha = 0.02f),
-            Color.Transparent
-        )
-    )
-    return this
-        .shadow(
-            elevation = if (dark) 0.dp else 6.dp,
-            shape = shape,
-            ambientColor = Color.Black.copy(alpha = 0.05f),
-            spotColor = Color.Black.copy(alpha = 0.07f)
-        )
-        .background(fill, shape)
-        .background(highlight, shape)
-        .drawBehind {
-            val outline = shape.createOutline(size, layoutDirection, this)
-            drawOutline(
-                outline = outline,
-                brush = Brush.linearGradient(
-                    listOf(
-                        Color.White.copy(alpha = if (dark) 0.22f else 0.75f),
-                        Color.White.copy(alpha = if (dark) 0.05f else 0.15f)
-                    )
-                ),
-                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.dp.toPx())
-            )
-        }
-}
-
 /** 玻璃圆形返回键（不是文字按钮） */
 @Composable
 fun GlassBackButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -211,4 +152,15 @@ fun Modifier.pressClick(enabled: Boolean = true, onClick: () -> Unit): Modifier 
             enabled = enabled,
             onClick = onClick
         )
+}
+/** 根容器：透明背景，让壁纸层透出来 */
+@Composable
+fun LuoSuGlassRoot(content: @Composable () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Transparent)
+    ) {
+        content()
+    }
 }
