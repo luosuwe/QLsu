@@ -181,7 +181,7 @@ class StorageCleanActivity : BaseComposeActivity() {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(colors.background)
+                .background(androidx.compose.ui.graphics.Color.Transparent)
         ) {
             Column(
                 modifier = Modifier
