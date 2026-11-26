@@ -210,7 +210,6 @@ fun PluginScreen(
                 connection = nestedScrollConnection
             )
     ) {
-        luo.qlsu.ui.Wallpaper.WallpaperLayer()
         Column(
             modifier = Modifier
                 .fillMaxSize()
