@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
@@ -45,6 +46,8 @@ import java.net.URL
  */
 object Wallpaper {
 
+    var revision by androidx.compose.runtime.mutableIntStateOf(0)
+
     private const val PREFS = "qlsu_wallpaper"
     private const val KEY_URL = "url"
     private const val KEY_LOCAL = "local"
@@ -57,16 +60,19 @@ object Wallpaper {
         ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY_LOCAL, "") ?: ""
 
     fun setUrl(ctx: Context, url: String) {
+        revision++
         ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putString(KEY_URL, url.trim()).remove(KEY_LOCAL).apply()
     }
 
     fun setLocal(ctx: Context, path: String) {
+        revision++
         ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
             .putString(KEY_LOCAL, path).remove(KEY_URL).apply()
     }
 
     fun clear(ctx: Context) {
+        revision++
         ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().clear().apply()
     }
 
@@ -107,7 +113,7 @@ object Wallpaper {
     @Composable
     fun WallpaperLayer() {
         val ctx = LocalContext.current
-        val key = "${url(ctx)}|${local(ctx)}"
+        val key = "${revision}-${url(ctx)}-${local(ctx)}"
         var bmp by remember(key) { mutableStateOf<ImageBitmap?>(null) }
         LaunchedEffect(key) { bmp = load(ctx) }
         bmp?.let {
@@ -124,7 +130,7 @@ object Wallpaper {
     @Composable
     fun Background(content: @Composable () -> Unit) {
         val ctx = LocalContext.current
-        val key = "${url(ctx)}|${local(ctx)}"
+        val key = "${revision}-${url(ctx)}-${local(ctx)}"
         var bmp by remember(key) { mutableStateOf<ImageBitmap?>(null) }
         LaunchedEffect(key) { bmp = load(ctx) }
 
@@ -161,15 +167,15 @@ fun WallpaperButton(modifier: Modifier = Modifier) {
         }
     }
 
-    Text(
-        text = "壁纸",
-        fontSize = 11.sp,
-        color = Color(0xFF6B7280),
+    androidx.compose.foundation.Image(
+        painter = androidx.compose.ui.res.painterResource(luo.qlsu.R.drawable.ic_wallpaper),
+        contentDescription = "自定义背景",
         modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
+            .size(38.dp)
+            .clip(RoundedCornerShape(12.dp))
             .background(Color.Black.copy(alpha = 0.05f))
             .clickable { show = true }
-            .padding(horizontal = 10.dp, vertical = 6.dp)
+            .padding(9.dp)
     )
 
     if (show) {
