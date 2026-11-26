@@ -95,7 +95,7 @@ object QQSettingInject : BaseApiHookItem<Listener>(), DexKitTask {
                     context,
                     MODULE_ORDER,
                     "JavaPlugin",
-                    R.drawable.ic_float_ball
+                    R.drawable.ic_launcher
                 )
                 setOnClickListener.invoke(
                     pluginEntry, makeProxy(
@@ -109,7 +109,7 @@ object QQSettingInject : BaseApiHookItem<Listener>(), DexKitTask {
                     context,
                     MODULE_ORDER,
                     "缓存清理",
-                    deleteIconRes
+                    R.drawable.ic_launcher
                 )
                 setOnClickListener.invoke(
                     cleanEntry, makeProxy(
