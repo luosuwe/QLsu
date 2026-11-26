@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
@@ -61,16 +62,25 @@ fun Modifier.glassSurface(
     tintAlpha: Float = 0.72f,
 ): Modifier {
     val dark = QLsuTheme.colors.isDark
-    val fill = if (dark) Color(0xFF1C1C1E).copy(alpha = 0.92f) else Color(0xFFF6F6FA).copy(alpha = tintAlpha)
-    val stroke = if (dark) Color(0xFF35353A) else Color(0xFFD7D7DF)
+    // 液态玻璃：低不透明度填充 + 白色描边 + 左上高光
+    val fill = if (dark) Color(0xFF161617).copy(alpha = 0.55f) else Color.White.copy(alpha = 0.26f)
+    val stroke = if (dark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.55f)
+    val highlight = Brush.linearGradient(
+        colors = listOf(
+            Color.White.copy(alpha = if (dark) 0.10f else 0.30f),
+            Color.White.copy(alpha = 0.02f),
+            Color.Transparent
+        )
+    )
     return this
         .shadow(
-            elevation = if (dark) 0.dp else 5.dp,
+            elevation = if (dark) 0.dp else 6.dp,
             shape = shape,
-            ambientColor = Color.Black.copy(alpha = 0.06f),
-            spotColor = Color.Black.copy(alpha = 0.08f)
+            ambientColor = Color.Black.copy(alpha = 0.05f),
+            spotColor = Color.Black.copy(alpha = 0.07f)
         )
         .background(fill, shape)
+        .background(highlight, shape)
         .border(1.dp, stroke, shape)
 }
 
