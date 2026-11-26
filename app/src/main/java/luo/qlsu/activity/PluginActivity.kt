@@ -31,7 +31,7 @@ class PluginActivity : BaseComposeActivity() {
 
             CompositionLocalProvider(LocalDensity provides stableDensity) {
                 QLsuTheme(isDarkTheme) {
-                    luo.qlsu.ui.luosu.LuoSuGlassRoot { luo.qlsu.ui.Wallpaper.Background { PluginScreen(
+                    luo.qlsu.ui.luosu.LuoSuGlassRoot { PluginScreen(
                         localPlugins = vm.filteredLocalPlugins,
                         onlineUiState = vm.filteredOnlineUiState,
                         isLocalRefreshing = vm.isLocalRefreshing,
@@ -61,7 +61,7 @@ class PluginActivity : BaseComposeActivity() {
                         onSearchActiveChange = { vm.isSearchActive = it },
                         searchQuery = vm.searchQuery,
                         onQueryChange = { vm.searchQuery = it }
-                    ) } }
+                    ) }
 
                     ConfirmDialog(
                         visible = vm.showDeleteDialog,
