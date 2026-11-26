@@ -71,6 +71,7 @@ fun LuoSuLauncherScreen(
             .background(Color(0xFFF4F6F9))
             .windowInsetsPadding(WindowInsets.statusBars)
     ) {
+        luo.qlsu.ui.Wallpaper.WallpaperLayer()
         Column(
             modifier = Modifier
                 .fillMaxSize()
