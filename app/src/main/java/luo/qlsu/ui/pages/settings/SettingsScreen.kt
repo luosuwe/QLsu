@@ -124,6 +124,7 @@ fun SettingsScreen(
             .background(colors.background)
             .windowInsetsPadding(WindowInsets.statusBars)
     ) {
+        luo.qlsu.ui.Wallpaper.WallpaperLayer()
         Column(modifier = Modifier.fillMaxSize()) {
             SearchTopBar(
                 title = selectedCategoryName ?: "QLsu",
