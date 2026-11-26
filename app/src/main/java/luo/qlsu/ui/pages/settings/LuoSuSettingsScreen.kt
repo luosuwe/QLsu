@@ -114,7 +114,9 @@ fun LuoSuSettingsScreen(
             .background(Color.Transparent)
             .windowInsetsPadding(WindowInsets.statusBars)
     ) {
+        luo.qlsu.ui.Wallpaper.WallpaperLayer()
         Column(modifier = Modifier.fillMaxSize()) {
+            luo.qlsu.ui.WallpaperButton(modifier = androidx.compose.ui.Modifier.padding(start = 12.dp, top = 4.dp))
             BrandHeader(
                 versionInfo = versionInfo,
                 isDarkTheme = isDarkTheme,
