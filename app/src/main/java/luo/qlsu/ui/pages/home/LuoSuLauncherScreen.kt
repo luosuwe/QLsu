@@ -68,7 +68,7 @@ fun LuoSuLauncherScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF4F6F9))
+            .background(Color.Transparent)
             .windowInsetsPadding(WindowInsets.statusBars)
     ) {
         Column(
