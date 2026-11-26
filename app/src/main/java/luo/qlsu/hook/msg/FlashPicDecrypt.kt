@@ -19,7 +19,7 @@ import luo.qlsu.hook.base.BaseSwitchHookItem
 )
 object FlashPicDecrypt : BaseSwitchHookItem(), GetMsgRecordListener, AIOViewUpdateListener {
 
-    private const val MARKER = "我是闪照"
+    private const val MARKER = "闪照"
 
     override fun onGet(msgRecord: MsgRecord) {
         if (!isEnable) return
@@ -42,14 +42,17 @@ object FlashPicDecrypt : BaseSwitchHookItem(), GetMsgRecordListener, AIOViewUpda
             if (tagView == null) {
                 val textView = TextView(frameLayout.context).apply {
                     text = MARKER
-                    textSize = 30f
-                    setTextColor(Color.BLUE)
+                    textSize = 11f
+                    setTextColor(Color.parseColor("#8A8A8E"))
                     gravity = Gravity.CENTER
                     tag = "FlashMarker"
                     layoutParams = FrameLayout.LayoutParams(
                         FrameLayout.LayoutParams.WRAP_CONTENT,
                         FrameLayout.LayoutParams.WRAP_CONTENT
-                    ).apply { gravity = Gravity.CENTER }
+                    ).apply {
+                        gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+                        bottomMargin = (4 * frameLayout.resources.displayMetrics.density).toInt()
+                    }
                 }
                 frameLayout.addView(textView)
             } else {
