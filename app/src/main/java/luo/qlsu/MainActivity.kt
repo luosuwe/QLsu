@@ -78,13 +78,7 @@ class MainActivity : ComponentActivity() {
                     isActivated = isActivated,
                     frameworkInfo = frameworkInfo,
                     account = account,
-                    motionEnabled = motionEnabled,
                     onUserCenterClick = { UserCenterLauncher.open(this) },
-                    onMotionToggle = { enabled ->
-                        motionEnabled = enabled
-                        UiMotion.setEnabled(this, enabled)
-                        if (!enabled) ActivityAnim.disable(this)
-                    },
                     onOpenSettings = { openInHost(null) },
                     onOpenSchedule = { openInHost("schedule") },
                     onGithubClick = { jump(SocialConfigManager.githubRepo) },
