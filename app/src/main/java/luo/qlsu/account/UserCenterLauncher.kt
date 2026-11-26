@@ -36,6 +36,7 @@ object UserCenterLauncher {
             startBrowser(context, url)
             return
         }
+        Toast.makeText(context, "正在打开用户中心…", Toast.LENGTH_SHORT).show()
         Thread {
             val body = "uin=${encode(info.uin)}&token=${encode(info.token)}"
             val resp = HttpUtils.postSync("$SITE/api/ticket.php", body)
