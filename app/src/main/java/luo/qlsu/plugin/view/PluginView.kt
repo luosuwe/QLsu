@@ -250,8 +250,10 @@ class PluginView(private val activity: Activity) {
 }
 
 sealed class PluginMenuItem {
-    data class Header(val name: String, val pluginId: String) : PluginMenuItem()
-    data class Action(val name: String, val pluginId: String, val onClick: () -> Unit) :
+    abstract val pluginId: String
+
+    data class Header(val name: String, override val pluginId: String) : PluginMenuItem()
+    data class Action(val name: String, override val pluginId: String, val onClick: () -> Unit) :
         PluginMenuItem()
 }
 
@@ -295,23 +297,20 @@ private fun PluginMenuContent(
                 Text("暂无运行中的脚本菜单", fontSize = 14.sp, color = colors.textSecondary)
             }
         } else {
+            // 一个脚本一张大卡片：组内 Header + 所有 Action 放在同一张卡里
+            val groups = LinkedHashMap<String, MutableList<PluginMenuItem>>()
+            menuItems.forEach { item -> groups.getOrPut(item.pluginId) { mutableListOf() }.add(item) }
+
             LazyColumn(
                 Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(Dimens.PaddingMedium)
             ) {
-                items(menuItems) { item ->
-                    when (item) {
-                        is PluginMenuItem.Header -> PluginHeaderItem(item.name) {
-                            onReloadPlugin(
-                                item.pluginId
-                            )
-                        }
-
-                        is PluginMenuItem.Action -> PluginActionItem(item.name) {
-                            item.onClick()
-                            onDismiss()
-                        }
-                    }
+                items(groups.values.toList(), key = { it.first().pluginId }) { group ->
+                    PluginGroupCard(
+                        items = group,
+                        onReload = { onReloadPlugin(group.first().pluginId) },
+                        onAction = { item -> item.onClick(); onDismiss() }
+                    )
                 }
             }
         }
@@ -319,32 +318,45 @@ private fun PluginMenuContent(
 }
 
 @Composable
-private fun PluginHeaderItem(name: String, onClick: () -> Unit) {
-    Text(
-        text = name,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .glassSurface(RoundedCornerShape(16.dp))
-            .pressClick(onClick = onClick)
-            .padding(12.dp, 14.dp),
-        color = AccentGreen,
-        fontSize = 16.sp,
-        fontWeight = FontWeight.Bold
-    )
-}
-
-@Composable
-private fun PluginActionItem(name: String, onClick: () -> Unit) {
+private fun PluginGroupCard(
+    items: List<PluginMenuItem>,
+    onReload: () -> Unit,
+    onAction: (PluginMenuItem.Action) -> Unit
+) {
     val colors = QLsuTheme.colors
-    Box(
+    val header = items.filterIsInstance<PluginMenuItem.Header>().firstOrNull()
+    val actions = items.filterIsInstance<PluginMenuItem.Action>()
+
+    Column(
         Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .glassSurface(RoundedCornerShape(16.dp))
-            .pressClick(onClick = onClick)
-            .padding(Dimens.CardCornerRadius, 18.dp), Alignment.Center
+            .clip(RoundedCornerShape(18.dp))
+            .background(if (colors.isDark) androidx.compose.ui.graphics.Color(0xE61C1C1E.toInt()) else androidx.compose.ui.graphics.Color(0xF2FFFFFF.toInt()))
+            .padding(vertical = 4.dp)
     ) {
-        Text(name, fontSize = 15.sp, color = colors.textPrimary)
+        header?.let { h ->
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .pressClick(onClick = onReload)
+                    .padding(horizontal = 18.dp, vertical = 14.dp)
+            ) {
+                Text(h.name, color = AccentGreen, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            }
+            HorizontalDivider(color = colors.textSecondary.copy(0.12f))
+        }
+        actions.forEachIndexed { index, action ->
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .pressClick { onAction(action) }
+                    .padding(horizontal = 18.dp, vertical = 16.dp)
+            ) {
+                Text(action.name, fontSize = 15.sp, color = colors.textPrimary)
+            }
+            if (index != actions.lastIndex) {
+                HorizontalDivider(color = colors.textSecondary.copy(0.08f))
+            }
+        }
     }
 }
