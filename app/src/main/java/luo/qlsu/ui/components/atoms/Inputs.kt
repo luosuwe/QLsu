@@ -54,7 +54,7 @@ fun QLsuTextField(
                     .fillMaxWidth()
                     .height(48.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .glassSurface(RoundedCornerShape(16.dp))
+                    .background(if (colors.isDark) androidx.compose.ui.graphics.Color(0xFF2A2A2E) else androidx.compose.ui.graphics.Color(0xFFF2F2F6))
                     .padding(horizontal = Dimens.PaddingMedium),
                 contentAlignment = Alignment.CenterStart
             ) {
