@@ -8,7 +8,10 @@ object BgEraserHook {
 
     const val PACKAGE = "com.apowersoft.backgrounderaser"
 
+    private val installing = java.util.concurrent.atomic.AtomicBoolean(false)
+
     fun install(cl: ClassLoader) {
+        if (!installing.compareAndSet(false, true)) return
         var ok = 0
         ok += if (XpHooks.hookResult(cl, "com.backgrounderaser.baselib.account.VipManager", "isVip", true)) 1 else 0
         ok += if (XpHooks.hookResult(cl, "com.backgrounderaser.baselib.account.VipManager", "hasVipValid", true)) 1 else 0
