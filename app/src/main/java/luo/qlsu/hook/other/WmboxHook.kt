@@ -36,6 +36,7 @@ object WmboxHook {
         ok += if (runCatching { hookReturn(cl, PROFILE, "getPremiumExpiresAt", "2099-12-31 23:59:59") }.isSuccess) 1 else 0
         runCatching { hookReturn(cl, PROFILE, "getNickname", "QLsu") }
         runCatching { fakeAccountData(cl) }
+        runCatching { blockPaywallDialog(cl) }
         // 列表/卡片绑定层的会员判断（a3.c / a3.c2 的 d()）
         listOf("a3.c", "a3.c2").forEach { cn ->
             runCatching { hookReturn(cl, cn, "d", true) }
@@ -74,6 +75,21 @@ object WmboxHook {
                 override fun beforeHookedMethod(param: MethodHookParam) { param.result = data }
             })
         }
+    }
+
+    /**
+     * com.google.android.gms.internal.mlkit_vision_common.i6.b(Activity)
+     * 就是弹「当前功能仅限付费会员使用」的方法，直接空实现，任何漏网判断都不会再拦截。
+     */
+    private fun blockPaywallDialog(cl: ClassLoader) {
+        val cls = XposedHelpers.findClass("com.google.android.gms.internal.mlkit_vision_common.i6", cl)
+        cls.declaredMethods
+            .filter { it.name == "b" && it.parameterTypes.size == 1 }
+            .forEach { m ->
+                XposedBridge.hookMethod(m, object : XC_MethodHook() {
+                    override fun beforeHookedMethod(param: MethodHookParam) { param.result = null }
+                })
+            }
     }
 
     private fun newInstanceUnsafe(cls: Class<*>): Any {
