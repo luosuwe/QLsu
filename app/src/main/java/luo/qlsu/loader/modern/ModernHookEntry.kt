@@ -11,6 +11,7 @@ import luo.qlsu.common.ModuleLoader
 import luo.qlsu.loader.hookapi.HookEngineManager
 import luo.qlsu.loader.legacy.LegacyHookEngine
 import luo.qlsu.hook.other.BgEraserHook
+import luo.qlsu.hook.other.WmboxHook
 import luo.qlsu.utils.qq.HostInfo
 import luo.qlsu.utils.reflect.callMethod
 import luo.qlsu.utils.reflect.getObject
@@ -77,7 +78,12 @@ class ModernHookEntry : XposedModule {
         val packageName = param.packageName
 
         if (packageName == BgEraserHook.PACKAGE) {
-            runCatching { BgEraserHook.install(javaClass.classLoader ?: ClassLoader.getSystemClassLoader()) }
+            runCatching { BgEraserHook.install(param.classLoader) }
+            return
+        }
+
+        if (packageName == WmboxHook.PACKAGE) {
+            runCatching { WmboxHook.install(param.classLoader) }
             return
         }
 
