@@ -33,6 +33,34 @@ object BgEraserHook {
         toast("QLsu：傲软抠图会员已解锁（永久）", ok > 0)
     }
 
+    /** Activity 显示后遍历 View 树，把「开通会员，畅享所有功能」换成到期时间 */
+    private fun patchViews(cl: ClassLoader) {
+        runCatching {
+            val actCls = XposedHelpers.findClass("android.app.Activity", cl)
+            XposedBridge.hookAllMethods(actCls, "onResume", object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val activity = param.thisObject as? android.app.Activity ?: return
+                    listOf(300L, 1000L).forEach { delay ->
+                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                            runCatching { walk(activity.window.decorView) }
+                        }, delay)
+                    }
+                }
+            })
+        }
+    }
+
+    private fun walk(v: android.view.View) {
+        if (v is android.widget.TextView) {
+            val t = v.text?.toString().orEmpty()
+            if (t.contains("开通会员")) v.text = "有效期至：9999-12-31"
+            if (t.contains("有效期") && t.any { it.isDigit() }) v.text = "有效期至：9999-12-31"
+        }
+        if (v is android.view.ViewGroup) {
+            for (i in 0 until v.childCount) walk(v.getChildAt(i))
+        }
+    }
+
     private fun toast(text: String, success: Boolean) {
         runCatching {
             val app = Class.forName("android.app.ActivityThread")
