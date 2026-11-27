@@ -35,6 +35,10 @@ object WmboxHook {
         ok += if (runCatching { hookReturn(cl, PROFILE, "getGid", 1) }.isSuccess) 1 else 0
         ok += if (runCatching { hookReturn(cl, PROFILE, "getPremiumExpiresAt", "2099-12-31 23:59:59") }.isSuccess) 1 else 0
         runCatching { hookReturn(cl, PROFILE, "getNickname", "QLsu") }
+        // 列表/卡片绑定层的会员判断（a3.c / a3.c2 的 d()）
+        listOf("a3.c", "a3.c2").forEach { cn ->
+            runCatching { hookReturn(cl, cn, "d", true) }
+        }
         ok += if (runCatching { allBooleanTrue(cl) }.isSuccess) 1 else 0
         toast(ok > 0)
     }
