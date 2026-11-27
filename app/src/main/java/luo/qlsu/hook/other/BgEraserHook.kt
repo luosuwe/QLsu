@@ -23,8 +23,48 @@ object BgEraserHook {
         XpHooks.hookResult(cl, "com.apowersoft.apilib.bean.MattingUser", "getVip_deadline", java.lang.Long.valueOf(Long.MAX_VALUE))
         XpHooks.hookResult(cl, "com.apowersoft.apilib.bean.MattingUser", "getRecharge_vip_balance", java.lang.Long.valueOf(999999L))
 
-        patchTextsOnResume(cl)
+        hookTextViews(cl)
+        patchMyPage(cl)
         toast(ok > 0)
+    }
+
+    /** 直接 Hook TextView.setText，CharSequence / 资源 id 两种都拦 */
+    private fun hookTextViews(cl: ClassLoader) {
+        val tv = XpHooks.clazz(cl, "android.widget.TextView") ?: return
+        tv.declaredMethods.filter { it.name == "setText" && it.parameterCount == 1 }.forEach { m ->
+            runCatching {
+                luo.qlsu.loader.hookapi.HookEngineManager.engine.hookBefore(m) { p ->
+                    val raw = p.args.getOrNull(0)
+                    val text = when (raw) {
+                        is Int -> runCatching {
+                            val app = Class.forName("android.app.ActivityThread")
+                                .getMethod("currentApplication").invoke(null) as android.content.Context
+                            app.resources.getString(raw)
+                        }.getOrDefault("")
+                        else -> raw?.toString().orEmpty()
+                    }
+                    if (text.contains("开通会员") || (text.contains("有效期") && text.any { it.isDigit() })) {
+                        p.args[0] = "有效期至：9999-12-31"
+                    }
+                }
+            }
+        }
+    }
+
+    /** 「我的」页 k() 执行后递归遍历 View 树兜底 */
+    private fun patchMyPage(cl: ClassLoader) {
+        val cls = XpHooks.clazz(cl, "V0.a") ?: return
+        cls.declaredMethods.filter { it.name == "k" && it.parameterCount == 0 }.forEach { m ->
+            runCatching {
+                luo.qlsu.loader.hookapi.HookEngineManager.engine.hookAfter(m) { p ->
+                    val frag = p.thisObject
+                    runCatching {
+                        val view = frag.javaClass.getMethod("getView").invoke(frag) as? android.view.View
+                        walk(view)
+                    }
+                }
+            }
+        }
     }
 
     /** Activity 显示后遍历 View 树，把「开通会员 / 任何有效期日期」改成 9999-12-31 */
