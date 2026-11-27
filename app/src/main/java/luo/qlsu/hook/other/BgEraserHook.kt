@@ -12,23 +12,23 @@ object BgEraserHook {
 
     fun install(cl: ClassLoader) {
         if (!installing.compareAndSet(false, true)) return
-        var ok = 0
-        ok += if (XpHooks.hookResult(cl, "com.backgrounderaser.baselib.account.VipManager", "isVip", true)) 1 else 0
-        ok += if (XpHooks.hookResult(cl, "com.backgrounderaser.baselib.account.VipManager", "hasVipValid", true)) 1 else 0
-        ok += if (XpHooks.hookResult(cl, "com.backgrounderaser.baselib.account.VipManager", "hasVipValidOrBalance", true)) 1 else 0
-        ok += if (XpHooks.hookResult(cl, "com.backgrounderaser.baselib.account.VipManager", "isExpire", true)) 1 else 0
-        ok += if (XpHooks.hookResult(cl, "com.backgrounderaser.baselib.account.VipManager", "getDeadlineDate", "9999-12-31")) 1 else 0
-        ok += if (XpHooks.hookResult(cl, "com.backgrounderaser.baselib.account.VipManager", "getBalance", 999999L)) 1 else 0
-        XpHooks.hookVoid(cl, "com.backgrounderaser.baselib.account.VipManager", "loadVipInfo")
-        XpHooks.hookVoid(cl, "com.backgrounderaser.baselib.account.VipManager", "deductConsume")
-
-        XpHooks.hookResult(cl, "com.apowersoft.apilib.bean.MattingUser", "getIs_vip", java.lang.Boolean.TRUE)
-        XpHooks.hookResult(cl, "com.apowersoft.apilib.bean.MattingUser", "getVip_deadline", java.lang.Long.valueOf(Long.MAX_VALUE))
-        XpHooks.hookResult(cl, "com.apowersoft.apilib.bean.MattingUser", "getRecharge_vip_balance", java.lang.Long.valueOf(999999L))
-
-        hookTextViews(cl)
-        patchMyPage(cl)
-        toast(ok > 0)
+        var failed = false
+        runCatching {
+            XpHooks.hookResult(cl, "com.backgrounderaser.baselib.account.VipManager", "isVip", true)
+            XpHooks.hookResult(cl, "com.backgrounderaser.baselib.account.VipManager", "hasVipValid", true)
+            XpHooks.hookResult(cl, "com.backgrounderaser.baselib.account.VipManager", "hasVipValidOrBalance", true)
+            XpHooks.hookResult(cl, "com.backgrounderaser.baselib.account.VipManager", "isExpire", true)
+            XpHooks.hookResult(cl, "com.backgrounderaser.baselib.account.VipManager", "getDeadlineDate", "9999-12-31")
+            XpHooks.hookResult(cl, "com.backgrounderaser.baselib.account.VipManager", "getBalance", 999999L)
+            XpHooks.hookVoid(cl, "com.backgrounderaser.baselib.account.VipManager", "loadVipInfo")
+            XpHooks.hookVoid(cl, "com.backgrounderaser.baselib.account.VipManager", "deductConsume")
+            XpHooks.hookResult(cl, "com.apowersoft.apilib.bean.MattingUser", "getIs_vip", java.lang.Boolean.TRUE)
+            XpHooks.hookResult(cl, "com.apowersoft.apilib.bean.MattingUser", "getVip_deadline", java.lang.Long.valueOf(Long.MAX_VALUE))
+            XpHooks.hookResult(cl, "com.apowersoft.apilib.bean.MattingUser", "getRecharge_vip_balance", java.lang.Long.valueOf(999999L))
+            hookTextViews(cl)
+            patchMyPage(cl)
+        }.onFailure { failed = true }
+        toast(!failed)
     }
 
     /** 直接 Hook TextView.setText，CharSequence / 资源 id 两种都拦 */
