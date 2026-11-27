@@ -60,7 +60,32 @@ object BgEraserHook {
         }
     }
 
+    /** 直接给单例的 loginResponse 字段赋值，防止内部读字段而不是走 getter */
+    private fun setLoginField(cl: ClassLoader) {
+        runCatching {
+            val cls = XposedHelpers.findClass("com.backgrounderaser.baselib.account.LoginManager", cl)
+            val inst = XposedHelpers.callStaticMethod(cls, "get") ?: return
+            XposedHelpers.setObjectField(inst, "loginResponse", fakeLoginResponse(cl))
+        }
+    }
+
+    /** 不走登录页 */
+    private fun blockLoginPages(cl: ClassLoader) {
+        val cls = XposedHelpers.findClass("com.backgrounderaser.baselib.account.LoginActionHelper", cl)
+        listOf("jumpToLogin", "startAccountLoginActivity").forEach { name ->
+            cls.declaredMethods.filter { it.name == name }.forEach { m ->
+                XposedBridge.hookMethod(m, object : XC_MethodHook() {
+                    override fun beforeHookedMethod(param: MethodHookParam) {
+                        param.result = null
+                    }
+                })
+            }
+        }
+    }
+
     private fun loginManager(cl: ClassLoader) {
+        setLoginField(cl)
+        blockLoginPages(cl)
         val cn = "com.backgrounderaser.baselib.account.LoginManager"
         hookAll(cl, cn, "isLogin") { true }
         hookAll(cl, cn, "getUserId") { "QLsu" }
@@ -111,6 +136,32 @@ object BgEraserHook {
         set("nickname", "QLsu")
         set("is_recharge_vip", java.lang.Boolean.TRUE)
         return obj
+    }
+
+    /** 「我的」页刷新后覆写会员文案 */
+    private fun myPage(cl: ClassLoader) {
+        runCatching {
+            val cls = XposedHelpers.findClass("V0.a", cl)
+            cls.declaredMethods.filter { it.name == "k" && it.parameterCount == 0 }.forEach { m ->
+                XposedBridge.hookMethod(m, object : XC_MethodHook() {
+                    override fun afterHookedMethod(param: MethodHookParam) {
+                        runCatching {
+                            val binding = XposedHelpers.getObjectField(param.thisObject, "binding") ?: return
+                            fun setText(field: String, text: String) {
+                                runCatching {
+                                    val tv = XposedHelpers.getObjectField(binding, field) as? android.widget.TextView
+                                    tv?.text = text
+                                }
+                            }
+                            setText("tvUserName", "QLsu")
+                            setText("tvUserId", "UID: QLsu")
+                            setText("tvVipHint", "有效期至：永久")
+                            setText("tvResidue", "999999")
+                        }
+                    }
+                })
+            }
+        }
     }
 
     private fun beans(cl: ClassLoader) {
