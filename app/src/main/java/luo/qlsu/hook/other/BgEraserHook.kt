@@ -121,6 +121,8 @@ object BgEraserHook {
                             else -> raw?.toString().orEmpty()
                         }
                         when {
+                            s.contains("有效期至") || s.contains("有效期") ->
+                                param.args[0] = "有效期至：9999-12-31"
                             s.contains("开通会员") -> param.args[0] = "有效期至：9999-12-31"
                             s.contains("立即续费") -> param.args[0] = "立即续费"
                             s.contains("续费") -> param.args[0] = "立即续费"
