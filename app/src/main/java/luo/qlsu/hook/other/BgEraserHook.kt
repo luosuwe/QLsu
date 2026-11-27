@@ -108,10 +108,22 @@ object BgEraserHook {
             cls.declaredMethods.filter { it.name == "setText" && it.parameterTypes.size == 1 }.forEach { m ->
                 XposedBridge.hookMethod(m, object : XC_MethodHook() {
                     override fun beforeHookedMethod(param: MethodHookParam) {
-                        val s = param.args[0]?.toString().orEmpty()
+                        val raw = param.args[0]
+                        val s = when (raw) {
+                            is Int -> {
+                                runCatching {
+                                    val res = (Class.forName("android.app.ActivityThread")
+                                        .getMethod("currentApplication").invoke(null)
+                                        as android.content.Context).resources
+                                    res.getString(raw)
+                                }.getOrDefault("")
+                            }
+                            else -> raw?.toString().orEmpty()
+                        }
                         when {
                             s.contains("开通会员") -> param.args[0] = "永久会员，已解锁全部功能"
                             s.contains("立即续费") -> param.args[0] = "永久有效"
+                            s.contains("续费") -> param.args[0] = "永久有效"
                         }
                     }
                 })
@@ -138,7 +150,8 @@ object BgEraserHook {
                             setText("tvUserId", "UID: QLsu")
                             setText("tvVipHint", "有效期至：永久")
                             setText("tvResidue", "999999")
-                            setText("tvBuyVip", "永久会员")
+                            setText("tvBuyVip", "永久有效")
+                            setText("tvBuyDesc", "永久会员，已解锁全部功能")
                         }
                     }
                 })
