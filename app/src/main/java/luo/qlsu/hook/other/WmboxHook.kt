@@ -11,7 +11,10 @@ object WmboxHook {
     private const val MEMBER_UTIL = "com.One.WoodenLetter.activitys.user.util.a"
     private const val PROFILE = "cn.woobx.databinding.model.AccountDataModel\$AccountData\$Profile"
 
+    private val installing = java.util.concurrent.atomic.AtomicBoolean(false)
+
     fun install(cl: ClassLoader) {
+        if (!installing.compareAndSet(false, true)) return
         var ok = 0
         ok += if (XpHooks.hookResult(cl, MEMBER_UTIL, "d", true)) 1 else 0
         ok += if (XpHooks.hookResult(cl, MEMBER_UTIL, "c", true)) 1 else 0
