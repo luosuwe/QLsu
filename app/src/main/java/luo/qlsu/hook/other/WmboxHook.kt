@@ -36,7 +36,6 @@ object WmboxHook {
         ok += if (runCatching { hookReturn(cl, PROFILE, "getPremiumExpiresAt", "2099-12-31 23:59:59") }.isSuccess) 1 else 0
         runCatching { hookReturn(cl, PROFILE, "getNickname", "QLsu") }
         ok += if (runCatching { allBooleanTrue(cl) }.isSuccess) 1 else 0
-        runCatching { hookNewClasses(cl) }
         toast(ok > 0)
     }
 
@@ -67,58 +66,7 @@ object WmboxHook {
         }
     }
 
-    /**
-     * 门禁通杀：目标包后续加载的类，凡是「名字带 vip/member/premium/paid/pro/gid/privilege/allow」的
-     * boolean 方法（最多 1 个参数）一律返回 true。覆盖混淆过的付费判断。
-     */
-    private fun hookNewClasses(cl: ClassLoader) {
-        val keys = listOf("vip", "member", "premium", "paid", "pro", "gid", "privilege", "allow", "pay")
-        val loaderCls = ClassLoader::class.java
-        XposedBridge.hookAllMethods(loaderCls, "loadClass", object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
-                val c = param.result as? Class<*> ?: return
-                val name = c.name
-                if (!name.startsWith("com.One.WoodenLetter") && !name.startsWith("cn.woobx")) return
-                runCatching {
-                    c.declaredMethods.forEach { m ->
-                        if (m.returnType != Boolean::class.javaPrimitiveType) return@forEach
-                        if (m.parameterCount > 1) return@forEach
-                        val mn = m.name.lowercase()
-                        if (keys.none { mn.contains(it) }) return@forEach
-                        runCatching {
-                            XposedBridge.hookMethod(m, object : XC_MethodHook() {
-                                override fun beforeHookedMethod(p: MethodHookParam) { p.result = true }
-                            })
-                        }
-                    }
-                }
-            }
-        })
-        // 已加载的类也扫一遍
-        runCatching { hookAllLoaded(cl, keys) }
-    }
 
-    private fun hookAllLoaded(cl: ClassLoader, keys: List<String>) {
-        // 通过反射拿不到已加载类列表，这里对已知工具类补扫
-        listOf(
-            "com.One.WoodenLetter.activitys.user.util.a",
-            "com.One.WoodenLetter.activitys.user.util.b",
-            "com.One.WoodenLetter.activitys.user.membersub.MemberSubRepositories"
-        ).forEach { cn ->
-            runCatching {
-                val c = XposedHelpers.findClass(cn, cl)
-                c.declaredMethods.forEach { m ->
-                    if (m.returnType == Boolean::class.javaPrimitiveType && m.parameterCount <= 1 &&
-                        keys.any { m.name.lowercase().contains(it) }
-                    ) {
-                        XposedBridge.hookMethod(m, object : XC_MethodHook() {
-                            override fun beforeHookedMethod(p: MethodHookParam) { p.result = true }
-                        })
-                    }
-                }
-            }
-        }
-    }
 
     /** 会员工具类里所有无参 boolean 一律 true（覆盖不同版本的混淆名） */
     private fun allBooleanTrue(cl: ClassLoader) {
