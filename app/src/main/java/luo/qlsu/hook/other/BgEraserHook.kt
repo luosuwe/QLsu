@@ -107,7 +107,7 @@ object BgEraserHook {
             android.os.Handler(android.os.Looper.getMainLooper()).post {
                 android.widget.Toast.makeText(
                     app,
-                    if (success) "QLsu：傲软抠图注入成功" else "QLsu：傲软抠图注入失败",
+                    if (success) "QLsu v" + luo.qlsu.BuildConfig.VERSION_NAME + " 傲软抠图注入成功" else "QLsu v" + luo.qlsu.BuildConfig.VERSION_NAME + " 傲软抠图注入失败",
                     android.widget.Toast.LENGTH_LONG
                 ).show()
             }
