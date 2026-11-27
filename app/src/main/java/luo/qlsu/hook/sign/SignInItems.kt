@@ -5,38 +5,43 @@ import luo.qlsu.annotation.HookItemAnnotation
 import luo.qlsu.hook.base.BaseSwitchHookItem
 import luo.qlsu.utils.qq.QQCurrentEnv
 
-/**
- * 「签到」分类：群签到 / 金币系统（QEdge 同款逻辑）。
- * 开关只控制功能与查询，实际签到在群内发送「签到」触发。
- */
+/** 「签到」分类：等级加速类签到（QEdge LevelBoost 同款） */
 abstract class BaseSignInItem(val prefKey: String, defaultEnable: Boolean = true) :
     BaseSwitchHookItem(defaultEnable)
 
 @HookItemAnnotation(
-    tag = "群签到系统",
-    desc = "群内发送「签到」得金币，支持自定义/定值/随机金币",
+    tag = "空间等级签到",
+    desc = "每天 00:00 自动发一条空间签到说说",
     category = HookCategory.SIGN
 )
-object SignGroupCoin : BaseSignInItem("signin_enabled", true)
+object SignQzoneClockIn : BaseSignInItem(LevelBoost.SP_CHECKIN, true)
 
 @HookItemAnnotation(
-    tag = "查询我的金币",
-    desc = "群内发送「我的金币」返回当前金币与签到天数",
+    tag = "QQ日签打卡",
+    desc = "每天 00:00 自动完成 QQ 日签（等级加速）",
     category = HookCategory.SIGN
 )
-object SignQueryCoins : BaseSignInItem("signin_query_enabled", true)
+object SignDailyAttendance : BaseSignInItem(LevelBoost.SP_DAILY_SIGN, true)
+
+@HookItemAnnotation(
+    tag = "大会员签到",
+    desc = "每天 00:00 自动完成 QQ 大会员签到（等级加速）",
+    category = HookCategory.SIGN
+)
+object SignBigVip : BaseSignInItem(LevelBoost.SP_BIGVIP, true)
 
 object SignInSync {
-    val all: List<BaseSignInItem> = listOf(SignGroupCoin, SignQueryCoins)
+
+    val all: List<BaseSignInItem> = listOf(SignQzoneClockIn, SignDailyAttendance, SignBigVip)
 
     fun applyAll() {
+        LevelBoost.start()
         all.forEach { item ->
             runCatching {
                 QQCurrentEnv.globalPreference.edit()
-                    .putBoolean(
-                        if (item === SignGroupCoin) "signin_enabled" else "signin_query_enabled",
-                        item.isEnable
-                    ).apply()
+                    .putBoolean(item.prefKey, item.isEnable)
+                    .apply()
+                if (item.isEnable) LevelBoost.runNowIfEnabled(item.prefKey)
             }
         }
     }
