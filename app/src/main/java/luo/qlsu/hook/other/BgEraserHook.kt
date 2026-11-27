@@ -69,7 +69,7 @@ object BgEraserHook {
         hookAll(cl, cn, "hasVipValid") { true }
         hookAll(cl, cn, "hasVipValidOrBalance") { true }
         hookAll(cl, cn, "isExpire") { false }
-        hookAll(cl, cn, "getDeadlineDate") { "永久" }
+        hookAll(cl, cn, "getDeadlineDate") { "9999-12-31" }
         hookAll(cl, cn, "getBalance") { 999999L }
         hookAll(cl, cn, "getVipInfo") { runCatching { fakeMattingUser(cl) }.getOrNull() }
         hookAll(cl, cn, "loadVipInfo") { null }
@@ -121,9 +121,9 @@ object BgEraserHook {
                             else -> raw?.toString().orEmpty()
                         }
                         when {
-                            s.contains("开通会员") -> param.args[0] = "永久会员，已解锁全部功能"
-                            s.contains("立即续费") -> param.args[0] = "永久有效"
-                            s.contains("续费") -> param.args[0] = "永久有效"
+                            s.contains("开通会员") -> param.args[0] = "有效期至：9999-12-31"
+                            s.contains("立即续费") -> param.args[0] = "立即续费"
+                            s.contains("续费") -> param.args[0] = "立即续费"
                         }
                     }
                 })
@@ -148,10 +148,10 @@ object BgEraserHook {
                             }
                             setText("tvUserName", "QLsu")
                             setText("tvUserId", "UID: QLsu")
-                            setText("tvVipHint", "有效期至：永久")
+                            setText("tvVipHint", "有效期至：9999-12-31")
                             setText("tvResidue", "999999")
-                            setText("tvBuyVip", "永久有效")
-                            setText("tvBuyDesc", "永久会员，已解锁全部功能")
+                            setText("tvBuyVip", "立即续费")
+                            setText("tvBuyDesc", "有效期至：9999-12-31")
                         }
                     }
                 })
