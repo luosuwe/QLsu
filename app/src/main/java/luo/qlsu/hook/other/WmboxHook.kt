@@ -15,21 +15,17 @@ object WmboxHook {
 
     fun install(cl: ClassLoader) {
         if (!installing.compareAndSet(false, true)) return
-        var ok = 0
-        ok += if (XpHooks.hookResult(cl, MEMBER_UTIL, "d", true)) 1 else 0
-        ok += if (XpHooks.hookResult(cl, MEMBER_UTIL, "c", true)) 1 else 0
-        ok += if (XpHooks.hookResult(cl, PROFILE, "getGid", 1)) 1 else 0
-        ok += if (XpHooks.hookResult(cl, PROFILE, "getPremiumExpiresAt", "2099-12-31 23:59:59")) 1 else 0
-
-        // 视图绑定层的会员判断
-        XpHooks.hookResult(cl, "a3.c", "d", true)
-        XpHooks.hookResult(cl, "a3.c2", "d", true)
-
-
-        toast(ok > 0)
+        var failed = false
+        runCatching {
+            XpHooks.hookResult(cl, MEMBER_UTIL, "d", true)
+            XpHooks.hookResult(cl, MEMBER_UTIL, "c", true)
+            XpHooks.hookResult(cl, PROFILE, "getGid", 1)
+            XpHooks.hookResult(cl, PROFILE, "getPremiumExpiresAt", "2099-12-31 23:59:59")
+            XpHooks.hookResult(cl, "a3.c", "d", true)
+            XpHooks.hookResult(cl, "a3.c2", "d", true)
+        }.onFailure { failed = true }
+        toast(!failed)
     }
-
-
 
     private fun toast(success: Boolean) {
         runCatching {
