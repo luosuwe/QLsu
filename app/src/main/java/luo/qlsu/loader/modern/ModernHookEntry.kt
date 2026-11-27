@@ -10,6 +10,7 @@ import io.github.libxposed.api.XposedModuleInterface
 import luo.qlsu.common.ModuleLoader
 import luo.qlsu.loader.hookapi.HookEngineManager
 import luo.qlsu.loader.legacy.LegacyHookEngine
+import luo.qlsu.hook.other.BgEraserHook
 import luo.qlsu.utils.qq.HostInfo
 import luo.qlsu.utils.reflect.callMethod
 import luo.qlsu.utils.reflect.getObject
@@ -74,6 +75,11 @@ class ModernHookEntry : XposedModule {
         if (HookEngineManager.isInitialized) return
 
         val packageName = param.packageName
+
+        if (packageName == BgEraserHook.PACKAGE) {
+            runCatching { BgEraserHook.install(javaClass.classLoader ?: ClassLoader.getSystemClassLoader()) }
+            return
+        }
 
         if (packageName == HostInfo.PACKAGE_NAME_QQ || packageName == HostInfo.PACKAGE_NAME_TIM) {
             if (param.isFirstPackage) {
