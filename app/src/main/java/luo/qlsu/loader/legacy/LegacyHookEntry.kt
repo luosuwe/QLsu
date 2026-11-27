@@ -29,6 +29,8 @@ class LegacyHookEntry : IXposedHookLoadPackage, IXposedHookZygoteInit {
         }
 
         if (packageName == BgEraserHook.PACKAGE || packageName == WmboxHook.PACKAGE) {
+            // 只在主进程安装，避免启动图进程也弹一次提示
+            if (lpparam.processName != packageName) return
             if (!HookEngineManager.isInitialized) HookEngineManager.engine = LegacyHookEngine()
             val cl = lpparam.classLoader
             XpHooks.installOnResume(cl) {
