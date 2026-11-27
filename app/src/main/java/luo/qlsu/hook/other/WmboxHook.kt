@@ -17,15 +17,20 @@ object WmboxHook {
     private const val MEMBER_UTIL = "com.One.WoodenLetter.activitys.user.util.a"
     private const val PROFILE = "cn.woobx.databinding.model.AccountDataModel\$AccountData\$Profile"
 
+    private var installed = false
+
     fun install(cl: ClassLoader) {
+        // 等界面真正起来再装，避免启动期 findClass 触发 SDK 初始化导致卡白屏
         runCatching {
-            val appCls = XposedHelpers.findClass("android.app.Application", cl)
-            XposedBridge.hookAllMethods(appCls, "onCreate", object : XC_MethodHook() {
+            val actCls = XposedHelpers.findClass("android.app.Activity", cl)
+            XposedBridge.hookAllMethods(actCls, "onResume", object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
-                    doInstall(cl)
+                    if (installed) return
+                    installed = true
+                    runCatching { doInstall(cl) }
                 }
             })
-        }.onFailure { doInstall(cl) }
+        }
     }
 
     private fun doInstall(cl: ClassLoader) {
@@ -90,7 +95,7 @@ object WmboxHook {
      * 就是弹「当前功能仅限付费会员使用」的方法，直接空实现，任何漏网判断都不会再拦截。
      */
     private fun blockPaywallDialog(cl: ClassLoader) {
-        val cls = XposedHelpers.findClass("com.google.android.gms.internal.mlkit_vision_common.i6", cl)
+        val cls = XposedHelpers.findClassIfExists("com.google.android.gms.internal.mlkit_vision_common.i6", cl) ?: return
         cls.declaredMethods
             .filter { it.name == "b" && it.parameterTypes.size == 1 }
             .forEach { m ->
