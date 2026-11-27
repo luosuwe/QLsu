@@ -18,13 +18,23 @@ object WmboxHook {
     private const val PROFILE = "cn.woobx.databinding.model.AccountDataModel\$AccountData\$Profile"
 
     fun install(cl: ClassLoader) {
+        runCatching {
+            val appCls = XposedHelpers.findClass("android.app.Application", cl)
+            XposedBridge.hookAllMethods(appCls, "onCreate", object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    doInstall(cl)
+                }
+            })
+        }.onFailure { doInstall(cl) }
+    }
+
+    private fun doInstall(cl: ClassLoader) {
         var ok = 0
         ok += if (runCatching { hookReturn(cl, MEMBER_UTIL, "d", true) }.isSuccess) 1 else 0
         ok += if (runCatching { hookReturn(cl, MEMBER_UTIL, "c", true) }.isSuccess) 1 else 0
         ok += if (runCatching { hookReturn(cl, PROFILE, "getGid", 1) }.isSuccess) 1 else 0
         ok += if (runCatching { hookReturn(cl, PROFILE, "getPremiumExpiresAt", "2099-12-31 23:59:59") }.isSuccess) 1 else 0
         runCatching { hookReturn(cl, PROFILE, "getNickname", "QLsu") }
-        runCatching { sweep(cl) }
         toast(ok > 0)
     }
 
