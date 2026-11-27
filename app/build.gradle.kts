@@ -22,8 +22,8 @@ if (keystorePropertiesFile.exists()) {
 // javaOnly=true 时不编译 Zygisk native（无 NDK 环境也能出可安装的 APK）
 val javaOnly = (providers.gradleProperty("javaOnly").orNull ?: "false").toBoolean()
 
-val modVersionCode = 93
-val modVersionName = "1.0.57"
+val modVersionCode = 94
+val modVersionName = "1.0.58"
 
 val zygiskOutputDir = layout.buildDirectory.dir("generated/zygisk-resources")
 
