@@ -79,7 +79,15 @@ object BgEraserHook {
     private fun fakeMattingUser(cl: ClassLoader): Any {
         val cls = XposedHelpers.findClass("com.apowersoft.apilib.bean.MattingUser", cl)
         val obj = runCatching { XposedHelpers.newInstance(cls) }.getOrElse {
-            XposedHelpers.newInstance(cls, *arrayOfNulls<Any?>(0))
+            // 没有无参构造：用 Unsafe 直接分配，避免构造函数校验
+            runCatching {
+                val unsafe = Class.forName("sun.misc.Unsafe").getDeclaredField("theUnsafe")
+                    .apply { isAccessible = true }.get(null)
+                val alloc = unsafe.javaClass.getMethod("allocateInstance", Class::class.java)
+                alloc.invoke(unsafe, cls)
+            }.getOrElse {
+                XposedHelpers.newInstance(cls, *arrayOfNulls<Any?>(0))
+            }
         }
         fun set(name: String, value: Any?) {
             runCatching { XposedHelpers.setObjectField(obj, name, value) }
@@ -112,6 +120,7 @@ object BgEraserHook {
                             setText("tvUserId", "UID: QLsu")
                             setText("tvVipHint", "有效期至：永久")
                             setText("tvResidue", "999999")
+                            setText("tvBuyVip", "永久会员")
                         }
                     }
                 })
