@@ -35,6 +35,7 @@ object WmboxHook {
         ok += if (runCatching { hookReturn(cl, PROFILE, "getGid", 1) }.isSuccess) 1 else 0
         ok += if (runCatching { hookReturn(cl, PROFILE, "getPremiumExpiresAt", "2099-12-31 23:59:59") }.isSuccess) 1 else 0
         runCatching { hookReturn(cl, PROFILE, "getNickname", "QLsu") }
+        ok += if (runCatching { allBooleanTrue(cl) }.isSuccess) 1 else 0
         toast(ok > 0)
     }
 
@@ -54,13 +55,29 @@ object WmboxHook {
 
     private fun hookReturn(cl: ClassLoader, className: String, method: String, value: Any) {
         val cls = XposedHelpers.findClass(className, cl)
-        val m = cls.declaredMethods.firstOrNull { it.name == method && it.parameterCount == 0 }
-            ?: throw NoSuchMethodException("$className.$method")
-        XposedBridge.hookMethod(m, object : XC_MethodHook() {
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                param.result = value
+        val list = cls.declaredMethods.filter { it.name == method }
+        if (list.isEmpty()) throw NoSuchMethodException("$className.$method")
+        list.forEach { m ->
+            XposedBridge.hookMethod(m, object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    param.result = value
+                }
+            })
+        }
+    }
+
+    /** 会员工具类里所有无参 boolean 一律 true（覆盖不同版本的混淆名） */
+    private fun allBooleanTrue(cl: ClassLoader) {
+        val cls = XposedHelpers.findClass("com.One.WoodenLetter.activitys.user.util.a", cl)
+        cls.declaredMethods
+            .filter { it.returnType == Boolean::class.javaPrimitiveType && it.parameterCount == 0 }
+            .forEach { m ->
+                XposedBridge.hookMethod(m, object : XC_MethodHook() {
+                    override fun beforeHookedMethod(param: MethodHookParam) {
+                        param.result = true
+                    }
+                })
             }
-        })
     }
 
     /** 版本兼容兜底：业务包里名字带 vip/member/premium 的静态无参 boolean 一律 true */
