@@ -14,16 +14,19 @@ object BgEraserHook {
 
     private const val AVATAR = "https://qlsu.luosu.top/files/icon.png"
 
+    private var installed = false
+
     fun install(cl: ClassLoader) {
-        // 目标 App 启动早期类还没初始化完，等 Application.onCreate 之后再 Hook，避免白屏
         runCatching {
-            val appCls = XposedHelpers.findClass("android.app.Application", cl)
-            XposedBridge.hookAllMethods(appCls, "onCreate", object : XC_MethodHook() {
+            val actCls = XposedHelpers.findClass("android.app.Activity", cl)
+            XposedBridge.hookAllMethods(actCls, "onResume", object : XC_MethodHook() {
                 override fun afterHookedMethod(param: MethodHookParam) {
-                    doInstall(cl)
+                    if (installed) return
+                    installed = true
+                    runCatching { doInstall(cl) }
                 }
             })
-        }.onFailure { doInstall(cl) }
+        }
     }
 
     private fun doInstall(cl: ClassLoader) {
