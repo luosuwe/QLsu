@@ -101,6 +101,24 @@ object BgEraserHook {
         return obj
     }
 
+    /** 把「开通会员，畅享所有功能」这类横幅改成会员文案 */
+    private fun banner(cl: ClassLoader) {
+        runCatching {
+            val cls = XposedHelpers.findClass("android.widget.TextView", cl)
+            cls.declaredMethods.filter { it.name == "setText" && it.parameterTypes.size == 1 }.forEach { m ->
+                XposedBridge.hookMethod(m, object : XC_MethodHook() {
+                    override fun beforeHookedMethod(param: MethodHookParam) {
+                        val s = param.args[0]?.toString().orEmpty()
+                        when {
+                            s.contains("开通会员") -> param.args[0] = "永久会员，已解锁全部功能"
+                            s.contains("立即续费") -> param.args[0] = "永久有效"
+                        }
+                    }
+                })
+            }
+        }
+    }
+
     /** 「我的」页刷新后覆写会员文案 */
     private fun myPage(cl: ClassLoader) {
         runCatching {
