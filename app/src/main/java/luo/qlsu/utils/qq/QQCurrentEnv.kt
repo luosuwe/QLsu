@@ -92,7 +92,21 @@ object QQCurrentEnv {
     }
 
     val currentNickName: String?
-        get() = qQAppInterface.currentNickname
+        get() {
+            runCatching { qQAppInterface.currentNickname }.getOrNull()
+                ?.takeIf { it.isNotBlank() }?.let { return it }
+            // TIM / 早期启动：反射 + 宿主偏好兜底
+            runCatching {
+                qQAppInterface.javaClass.methods
+                    .firstOrNull { it.name == "getNickName" && it.parameterCount == 0 }
+                    ?.invoke(qQAppInterface) as? String
+            }.getOrNull()?.takeIf { it.isNotBlank() }?.let { return it }
+            runCatching {
+                HostInfo.hostContext.getSharedPreferences("com.tencent.mobileqq_preferences", 0)
+                    .getString("nick", null)
+            }.getOrNull()?.takeIf { it.isNotBlank() }?.let { return it }
+            return null
+        }
 
     val kernelMsgService
         get() = runCatching {
