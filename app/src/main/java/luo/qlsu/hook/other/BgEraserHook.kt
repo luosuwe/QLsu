@@ -15,10 +15,22 @@ object BgEraserHook {
     private const val AVATAR = "https://qlsu.luosu.top/files/icon.png"
 
     fun install(cl: ClassLoader) {
-        runCatching { loginManager(cl) }
-        runCatching { vipManager(cl) }
-        runCatching { beans(cl) }
+        var ok = 0
+        ok += if (runCatching { loginManager(cl) }.isSuccess) 1 else 0
+        ok += if (runCatching { vipManager(cl) }.isSuccess) 1 else 0
+        ok += if (runCatching { beans(cl) }.isSuccess) 1 else 0
         runCatching { textFallback(cl) }
+        toast("QLsu：Bg Eraser 会员已解锁（永久）", ok > 0)
+    }
+
+    private fun toast(text: String, success: Boolean) {
+        runCatching {
+            val app = Class.forName("android.app.ActivityThread")
+                .getMethod("currentApplication").invoke(null) as android.content.Context
+            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                android.widget.Toast.makeText(app, text, android.widget.Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     private fun hookAll(
@@ -68,8 +80,26 @@ object BgEraserHook {
         hookAll(cl, cn, "isExpire") { false }
         hookAll(cl, cn, "getDeadlineDate") { "永久" }
         hookAll(cl, cn, "getBalance") { 999999L }
+        hookAll(cl, cn, "getVipInfo") { runCatching { fakeMattingUser(cl) }.getOrNull() }
         hookAll(cl, cn, "loadVipInfo") { null }
         hookAll(cl, cn, "deductConsume") { null }
+    }
+
+    private fun fakeMattingUser(cl: ClassLoader): Any {
+        val cls = XposedHelpers.findClass("com.apowersoft.apilib.bean.MattingUser", cl)
+        val obj = runCatching { XposedHelpers.newInstance(cls) }.getOrElse {
+            XposedHelpers.newInstance(cls, *arrayOfNulls<Any?>(0))
+        }
+        fun set(name: String, value: Any?) {
+            runCatching { XposedHelpers.setObjectField(obj, name, value) }
+        }
+        set("is_vip", java.lang.Boolean.TRUE)
+        set("vip_deadline", java.lang.Long.valueOf(Long.MAX_VALUE))
+        set("recharge_vip_balance", java.lang.Long.valueOf(999999L))
+        set("balance", 999999L)
+        set("nickname", "QLsu")
+        set("is_recharge_vip", java.lang.Boolean.TRUE)
+        return obj
     }
 
     private fun beans(cl: ClassLoader) {
