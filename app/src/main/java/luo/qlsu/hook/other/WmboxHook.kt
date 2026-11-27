@@ -22,39 +22,11 @@ object WmboxHook {
         XpHooks.hookResult(cl, "a3.c", "d", true)
         XpHooks.hookResult(cl, "a3.c2", "d", true)
 
-        fakeAccountData(cl)
-
-        // 付费弹窗方法：直接空实现（mlkit_vision_common.i6.b(Activity)）
-        XpHooks.hookVoid(cl, "com.google.android.gms.internal.mlkit_vision_common.i6", "b", 1)
 
         toast(ok > 0)
     }
 
-    private fun fakeAccountData(cl: ClassLoader) {
-        val profileCls = XpHooks.clazz(cl, PROFILE) ?: return
-        val dataCls = XpHooks.clazz(cl, "cn.woobx.databinding.model.AccountDataModel\$AccountData") ?: return
-        val profile = newInstance(profileCls)
-        runCatching { profileCls.getField("gid").set(profile, 1) }
-        runCatching { profileCls.getField("premiumExpiresAt").set(profile, "2099-12-31 23:59:59") }
-        runCatching { profileCls.getField("nickname").set(profile, "QLsu") }
-        val data = newInstance(dataCls)
-        runCatching { dataCls.getField("profile").set(data, profile) }
-        runCatching {
-            dataCls.declaredMethods.filter { it.name == "getProfile" }.forEach { m ->
-                m.isAccessible = true
-                luo.qlsu.loader.hookapi.HookEngineManager.engine.hookBefore(m) { p -> p.result = profile }
-            }
-        }
-        XpHooks.hookResult(cl, MEMBER_UTIL, "b", data)
-    }
 
-    private fun newInstance(cls: Class<*>): Any {
-        return runCatching { cls.getDeclaredConstructor().newInstance() }.getOrElse {
-            val unsafe = Class.forName("sun.misc.Unsafe").getDeclaredField("theUnsafe")
-                .apply { isAccessible = true }.get(null)
-            unsafe.javaClass.getMethod("allocateInstance", Class::class.java).invoke(unsafe, cls)
-        }
-    }
 
     private fun toast(success: Boolean) {
         runCatching {
@@ -63,7 +35,7 @@ object WmboxHook {
             android.os.Handler(android.os.Looper.getMainLooper()).post {
                 android.widget.Toast.makeText(
                     app,
-                    if (success) "QLsu：一个木函会员已解锁" else "QLsu：一个木函 Hook 未命中",
+                    if (success) "QLsu：一个木函注入成功" else "QLsu：一个木函注入失败",
                     android.widget.Toast.LENGTH_LONG
                 ).show()
             }
