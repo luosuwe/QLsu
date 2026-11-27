@@ -4,12 +4,14 @@ import androidx.core.content.edit
 import luo.qlsu.account.AccountSync
 import luo.qlsu.autodaily.AdEngine
 import luo.qlsu.hook.entry.QlsuEntryHook
+import luo.qlsu.hook.sign.GroupSignIn
 import luo.qlsu.hook.sign.SignInSync
 
 import luo.qlsu.generated.HookRegistry
 import luo.qlsu.hook.base.BaseApiHookItem
 import luo.qlsu.hook.base.BaseClickableHookItem
 import luo.qlsu.hook.base.BaseSwitchHookItem
+import luo.qlsu.hook.api.OnReceiveMsg
 import luo.qlsu.hook.base.Listener
 import luo.qlsu.hook.compat.HookCompat
 import luo.qlsu.plugin.MainPlugin
@@ -49,6 +51,7 @@ object MainHook {
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
             loadApiHook()
             initSwitchHookItem()
+            runCatching { OnReceiveMsg.addListener(GroupSignIn) }
             hookAccountChange()
             HookCompat.logPriority()
         }, HookCompat.HOOK_DELAY_MS)
