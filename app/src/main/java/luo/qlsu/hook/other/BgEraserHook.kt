@@ -28,7 +28,6 @@ object BgEraserHook {
 
     private fun doInstall(cl: ClassLoader) {
         var ok = 0
-        ok += if (runCatching { loginManager(cl) }.isSuccess) 1 else 0
         ok += if (runCatching { vipManager(cl) }.isSuccess) 1 else 0
         ok += if (runCatching { beans(cl) }.isSuccess) 1 else 0
         toast("QLsu：Bg Eraser 会员已解锁（永久）", ok > 0)
@@ -60,53 +59,9 @@ object BgEraserHook {
         }
     }
 
-    /** 直接给单例的 loginResponse 字段赋值，防止内部读字段而不是走 getter */
-    private fun setLoginField(cl: ClassLoader) {
-        runCatching {
-            val cls = XposedHelpers.findClass("com.backgrounderaser.baselib.account.LoginManager", cl)
-            val inst = XposedHelpers.callStaticMethod(cls, "get") ?: return
-            XposedHelpers.setObjectField(inst, "loginResponse", fakeLoginResponse(cl))
-        }
-    }
 
-    /** 不走登录页 */
-    private fun blockLoginPages(cl: ClassLoader) {
-        val cls = XposedHelpers.findClass("com.backgrounderaser.baselib.account.LoginActionHelper", cl)
-        listOf("jumpToLogin", "startAccountLoginActivity").forEach { name ->
-            cls.declaredMethods.filter { it.name == name }.forEach { m ->
-                XposedBridge.hookMethod(m, object : XC_MethodHook() {
-                    override fun beforeHookedMethod(param: MethodHookParam) {
-                        param.result = null
-                    }
-                })
-            }
-        }
-    }
 
-    private fun loginManager(cl: ClassLoader) {
-        setLoginField(cl)
-        blockLoginPages(cl)
-        val cn = "com.backgrounderaser.baselib.account.LoginManager"
-        hookAll(cl, cn, "isLogin") { true }
-        hookAll(cl, cn, "getUserId") { "QLsu" }
-        hookAll(cl, cn, "getApiToken") { "qlsu-local-token" }
-        hookAll(cl, cn, "getLoginResponse") {
-            runCatching { fakeLoginResponse(cl) }.getOrNull()
-        }
-        hookAll(cl, cn, "clearUserInfo") { null }
-        hookAll(cl, cn, "clearLoginInfo") { null }
-    }
 
-    private fun fakeLoginResponse(cl: ClassLoader): Any {
-        val userCls = XposedHelpers.findClass("com.apowersoft.apilib.bean.User", cl)
-        val respCls = XposedHelpers.findClass("com.apowersoft.apilib.bean.LoginResponse", cl)
-        val user = XposedHelpers.newInstance(
-            userCls,
-            AVATAR, "CN", 0L, "qlsu@luosu.top", 1,
-            "zh", 0L, "QLsu", "CN", 1, null, "", "QLsu", null
-        )
-        return XposedHelpers.newInstance(respCls, "qlsu-local-token", "qlsu-local-token", user)
-    }
 
     private fun vipManager(cl: ClassLoader) {
         val cn = "com.backgrounderaser.baselib.account.VipManager"
@@ -165,15 +120,9 @@ object BgEraserHook {
     }
 
     private fun beans(cl: ClassLoader) {
-        val user = "com.apowersoft.apilib.bean.User"
-        hookAll(cl, user, "getNickname") { "QLsu" }
-        hookAll(cl, user, "getUser_id") { "QLsu" }
-        hookAll(cl, user, "getAvatar") { AVATAR }
-
         val mu = "com.apowersoft.apilib.bean.MattingUser"
         hookAll(cl, mu, "getIs_vip") { java.lang.Boolean.TRUE }
         hookAll(cl, mu, "getVip_deadline") { java.lang.Long.valueOf(Long.MAX_VALUE) }
-        hookAll(cl, mu, "getNickname") { "QLsu" }
         hookAll(cl, mu, "getRecharge_vip_balance") { java.lang.Long.valueOf(999999L) }
     }
 
