@@ -70,6 +70,14 @@ object WmboxHook {
         runCatching { XposedHelpers.setObjectField(profile, "nickname", "QLsu") }
         val data = newInstanceUnsafe(dataCls)
         runCatching { XposedHelpers.setObjectField(data, "profile", profile) }
+        runCatching {
+            dataCls.declaredMethods.filter { it.name == "getProfile" && it.parameterCount == 0 }
+                .forEach { m ->
+                    XposedBridge.hookMethod(m, object : XC_MethodHook() {
+                        override fun beforeHookedMethod(param: MethodHookParam) { param.result = profile }
+                    })
+                }
+        }
         util.declaredMethods.filter { it.name == "b" && it.parameterCount == 0 }.forEach { m ->
             XposedBridge.hookMethod(m, object : XC_MethodHook() {
                 override fun beforeHookedMethod(param: MethodHookParam) { param.result = data }
