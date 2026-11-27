@@ -132,7 +132,7 @@ fun DialogButton(
             .clip(RoundedCornerShape(16.dp))
             .then(
                 if (isPrimary) Modifier.background(AccentBlue)
-                else Modifier.glassSurface(RoundedCornerShape(16.dp), tintAlpha = 0.95f)
+                else Modifier.background(if (colors.isDark) androidx.compose.ui.graphics.Color(0xFF2A2A2E) else androidx.compose.ui.graphics.Color(0xFFF2F2F6))
             )
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
