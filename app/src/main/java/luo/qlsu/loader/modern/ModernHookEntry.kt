@@ -79,6 +79,7 @@ class ModernHookEntry : XposedModule {
         val packageName = param.packageName
 
         if (packageName == BgEraserHook.PACKAGE || packageName == WmboxHook.PACKAGE) {
+            if (processName != packageName) return
             if (!HookEngineManager.isInitialized) HookEngineManager.engine = ModernHookEngine(this)
             val cl = param.classLoader
             XpHooks.installOnResume(cl) {
