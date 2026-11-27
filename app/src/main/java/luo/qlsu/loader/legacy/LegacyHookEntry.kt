@@ -9,6 +9,7 @@ import luo.qlsu.common.ModuleLoader
 import luo.qlsu.loader.hookapi.HookEngineManager
 import luo.qlsu.hook.other.BgEraserHook
 import luo.qlsu.hook.other.WmboxHook
+import luo.qlsu.hook.other.XpHooks
 import luo.qlsu.utils.qq.HostInfo
 
 @Keep
@@ -27,13 +28,12 @@ class LegacyHookEntry : IXposedHookLoadPackage, IXposedHookZygoteInit {
             LegacyHookStatusInit.init(lpparam.classLoader)
         }
 
-        if (packageName == BgEraserHook.PACKAGE) {
-            runCatching { BgEraserHook.install(lpparam.classLoader) }
-            return
-        }
-
-        if (packageName == WmboxHook.PACKAGE) {
-            runCatching { WmboxHook.install(lpparam.classLoader) }
+        if (packageName == BgEraserHook.PACKAGE || packageName == WmboxHook.PACKAGE) {
+            if (!HookEngineManager.isInitialized) HookEngineManager.engine = LegacyHookEngine()
+            val cl = lpparam.classLoader
+            XpHooks.installOnResume(cl) {
+                if (packageName == BgEraserHook.PACKAGE) BgEraserHook.install(cl) else WmboxHook.install(cl)
+            }
             return
         }
 
