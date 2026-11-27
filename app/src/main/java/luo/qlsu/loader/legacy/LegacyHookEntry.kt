@@ -7,6 +7,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage
 import luo.qlsu.BuildConfig
 import luo.qlsu.common.ModuleLoader
 import luo.qlsu.loader.hookapi.HookEngineManager
+import luo.qlsu.hook.other.BgEraserHook
 import luo.qlsu.utils.qq.HostInfo
 
 @Keep
@@ -23,6 +24,11 @@ class LegacyHookEntry : IXposedHookLoadPackage, IXposedHookZygoteInit {
 
         if (packageName == BuildConfig.APPLICATION_ID) {
             LegacyHookStatusInit.init(lpparam.classLoader)
+        }
+
+        if (packageName == BgEraserHook.PACKAGE) {
+            runCatching { BgEraserHook.install(lpparam.classLoader) }
+            return
         }
 
         if (packageName == HostInfo.PACKAGE_NAME_QQ || packageName == HostInfo.PACKAGE_NAME_TIM) {
