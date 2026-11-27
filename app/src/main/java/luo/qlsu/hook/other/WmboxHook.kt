@@ -35,6 +35,7 @@ object WmboxHook {
         ok += if (runCatching { hookReturn(cl, PROFILE, "getGid", 1) }.isSuccess) 1 else 0
         ok += if (runCatching { hookReturn(cl, PROFILE, "getPremiumExpiresAt", "2099-12-31 23:59:59") }.isSuccess) 1 else 0
         runCatching { hookReturn(cl, PROFILE, "getNickname", "QLsu") }
+        runCatching { fakeAccountData(cl) }
         // 列表/卡片绑定层的会员判断（a3.c / a3.c2 的 d()）
         listOf("a3.c", "a3.c2").forEach { cn ->
             runCatching { hookReturn(cl, cn, "d", true) }
@@ -54,6 +55,32 @@ object WmboxHook {
                     android.widget.Toast.LENGTH_LONG
                 ).show()
             }
+        }
+    }
+
+    /** 让 a.b() 返回带会员资料的账号对象，防止代码直接读字段 */
+    private fun fakeAccountData(cl: ClassLoader) {
+        val util = XposedHelpers.findClass("com.One.WoodenLetter.activitys.user.util.a", cl)
+        val dataCls = XposedHelpers.findClass("cn.woobx.databinding.model.AccountDataModel\$AccountData", cl)
+        val profCls = XposedHelpers.findClass("cn.woobx.databinding.model.AccountDataModel\$AccountData\$Profile", cl)
+        val profile = newInstanceUnsafe(profCls)
+        runCatching { XposedHelpers.setObjectField(profile, "gid", Integer.valueOf(1)) }
+        runCatching { XposedHelpers.setObjectField(profile, "premiumExpiresAt", "2099-12-31 23:59:59") }
+        runCatching { XposedHelpers.setObjectField(profile, "nickname", "QLsu") }
+        val data = newInstanceUnsafe(dataCls)
+        runCatching { XposedHelpers.setObjectField(data, "profile", profile) }
+        util.declaredMethods.filter { it.name == "b" && it.parameterCount == 0 }.forEach { m ->
+            XposedBridge.hookMethod(m, object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) { param.result = data }
+            })
+        }
+    }
+
+    private fun newInstanceUnsafe(cls: Class<*>): Any {
+        return runCatching { XposedHelpers.newInstance(cls) }.getOrElse {
+            val unsafe = Class.forName("sun.misc.Unsafe").getDeclaredField("theUnsafe")
+                .apply { isAccessible = true }.get(null)
+            unsafe.javaClass.getMethod("allocateInstance", Class::class.java).invoke(unsafe, cls)
         }
     }
 
