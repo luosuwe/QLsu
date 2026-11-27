@@ -1,0 +1,103 @@
+package luo.qlsu.hook.other
+
+import de.robv.android.xposed.XC_MethodHook
+import de.robv.android.xposed.XposedBridge
+import de.robv.android.xposed.XposedHelpers
+
+/**
+ * Bg Eraser（com.apowersoft.backgrounderaser）会员解锁。
+ * 模块作用域勾选该应用后生效：免登录、永久 VIP、昵称 QLsu、头像用模块图标。
+ */
+object BgEraserHook {
+
+    const val PACKAGE = "com.apowersoft.backgrounderaser"
+
+    private const val AVATAR = "https://qlsu.luosu.top/files/icon.png"
+
+    fun install(cl: ClassLoader) {
+        runCatching { loginManager(cl) }
+        runCatching { vipManager(cl) }
+        runCatching { beans(cl) }
+        runCatching { textFallback(cl) }
+    }
+
+    private fun hookAll(
+        cl: ClassLoader,
+        className: String,
+        method: String,
+        replacement: (XC_MethodHook.MethodHookParam) -> Any?
+    ) {
+        val cls = XposedHelpers.findClass(className, cl)
+        cls.declaredMethods.filter { it.name == method }.forEach { m ->
+            XposedBridge.hookMethod(m, object : XC_MethodHook() {
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    param.result = replacement(param)
+                }
+            })
+        }
+    }
+
+    private fun loginManager(cl: ClassLoader) {
+        val cn = "com.backgrounderaser.baselib.account.LoginManager"
+        hookAll(cl, cn, "isLogin") { true }
+        hookAll(cl, cn, "getUserId") { "QLsu" }
+        hookAll(cl, cn, "getApiToken") { "qlsu-local-token" }
+        hookAll(cl, cn, "getLoginResponse") {
+            runCatching { fakeLoginResponse(cl) }.getOrNull()
+        }
+        hookAll(cl, cn, "clearUserInfo") { null }
+        hookAll(cl, cn, "clearLoginInfo") { null }
+    }
+
+    private fun fakeLoginResponse(cl: ClassLoader): Any {
+        val userCls = XposedHelpers.findClass("com.apowersoft.apilib.bean.User", cl)
+        val respCls = XposedHelpers.findClass("com.apowersoft.apilib.bean.LoginResponse", cl)
+        val user = XposedHelpers.newInstance(
+            userCls,
+            AVATAR, "CN", 0L, "qlsu@luosu.top", 1,
+            "zh", 0L, "QLsu", "CN", 1, null, "", "QLsu", null
+        )
+        return XposedHelpers.newInstance(respCls, "qlsu-local-token", "qlsu-local-token", user)
+    }
+
+    private fun vipManager(cl: ClassLoader) {
+        val cn = "com.backgrounderaser.baselib.account.VipManager"
+        hookAll(cl, cn, "isVip") { true }
+        hookAll(cl, cn, "hasVipValid") { true }
+        hookAll(cl, cn, "hasVipValidOrBalance") { true }
+        hookAll(cl, cn, "isExpire") { false }
+        hookAll(cl, cn, "getDeadlineDate") { "永久" }
+        hookAll(cl, cn, "getBalance") { 999999L }
+        hookAll(cl, cn, "loadVipInfo") { null }
+        hookAll(cl, cn, "deductConsume") { null }
+    }
+
+    private fun beans(cl: ClassLoader) {
+        val user = "com.apowersoft.apilib.bean.User"
+        hookAll(cl, user, "getNickname") { "QLsu" }
+        hookAll(cl, user, "getUser_id") { "QLsu" }
+        hookAll(cl, user, "getAvatar") { AVATAR }
+
+        val mu = "com.apowersoft.apilib.bean.MattingUser"
+        hookAll(cl, mu, "getIs_vip") { java.lang.Boolean.TRUE }
+        hookAll(cl, mu, "getVip_deadline") { java.lang.Long.valueOf(Long.MAX_VALUE) }
+        hookAll(cl, mu, "getNickname") { "QLsu" }
+        hookAll(cl, mu, "getRecharge_vip_balance") { java.lang.Long.valueOf(999999L) }
+    }
+
+    /** 任何「有效期至 + 日期」的文案统一改成「永久」 */
+    private fun textFallback(cl: ClassLoader) {
+        val cls = XposedHelpers.findClass("android.widget.TextView", cl)
+        cls.declaredMethods.filter { it.name == "setText" && it.parameterTypes.size == 1 }
+            .forEach { m ->
+                XposedBridge.hookMethod(m, object : XC_MethodHook() {
+                    override fun beforeHookedMethod(param: MethodHookParam) {
+                        val s = param.args[0]?.toString().orEmpty()
+                        if (s.contains("有效期") && s.any { it.isDigit() }) {
+                            param.args[0] = "有效期至：永久"
+                        }
+                    }
+                })
+            }
+    }
+}
