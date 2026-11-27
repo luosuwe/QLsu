@@ -30,7 +30,7 @@ object BgEraserHook {
         var ok = 0
         ok += if (runCatching { vipManager(cl) }.isSuccess) 1 else 0
         ok += if (runCatching { beans(cl) }.isSuccess) 1 else 0
-        toast("QLsu：Bg Eraser 会员已解锁（永久）", ok > 0)
+        toast("QLsu：傲软抠图会员已解锁（永久）", ok > 0)
     }
 
     private fun toast(text: String, success: Boolean) {
